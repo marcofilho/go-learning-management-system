@@ -39,31 +39,17 @@ cd go-learning-management-system
 2. Copy the environment file:
 ```bash
 cp .env.example .env
-# Edit .env with your configuration (optional, has sensible defaults)
 ```
 
 3. Start the services:
-
-**Development Mode (with hot reload):**
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-```
-
-**Standard Mode:**
 ```bash
 make docker-up
 # or
 docker-compose up -d
 ```
 
-**Production Mode:**
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
 4. The API will be available at `http://localhost:8080`
    - Swagger documentation: `http://localhost:8080/swagger/index.html`
-   - Health check: `http://localhost:8080/api/health`
 
 5. Stop the services:
 ```bash
@@ -110,62 +96,6 @@ make docker-down    # Stop Docker services
 make docker-logs    # View API logs
 make dev            # Run with hot reload (requires air)
 make db-shell       # Open PostgreSQL shell
-```
-
-## Docker Configurations
-
-The project includes multiple Docker configurations for different environments:
-
-### Files
-- **`Dockerfile`** - Production-optimized multi-stage build
-  - Non-root user for security
-  - Health checks included
-  - Optimized layer caching
-  - Binary size ~15MB
-
-- **`Dockerfile.dev`** - Development with hot reload support
-  - Includes Air for automatic reload
-  - Volume mounting for live changes
-  - Development tools included
-
-- **`docker-compose.yml`** - Base configuration
-  - PostgreSQL database
-  - API service
-  - Health checks
-  - Network isolation
-
-- **`docker-compose.dev.yml`** - Development overrides
-  - Hot reload enabled
-  - Direct port access to PostgreSQL
-  - Debug logging
-  - Optional pgAdmin
-
-- **`docker-compose.prod.yml`** - Production overrides
-  - Resource limits (CPU/Memory)
-  - Stricter health checks
-  - Logging configuration
-  - No exposed database ports
-
-### Usage Examples
-
-**Development with hot reload:**
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-```
-
-**Production deployment:**
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
-**View logs:**
-```bash
-docker-compose logs -f api
-```
-
-**Rebuild after code changes:**
-```bash
-docker-compose build --no-cache api
 ```
 
 ## API Documentation
