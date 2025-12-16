@@ -4,6 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/docs"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/handler"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/middleware"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
@@ -19,6 +22,9 @@ func SetupRoutes(
 	tokenProvider auth.TokenProvider,
 ) http.Handler {
 	r := mux.NewRouter()
+
+	// Swagger documentation
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	api := r.PathPrefix("/api").Subrouter()
 

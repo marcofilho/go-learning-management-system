@@ -21,7 +21,22 @@ func NewEnrollmentHandler(enrollmentUseCase *usecase.EnrollmentUseCase) *Enrollm
 }
 
 // POST /api/courses/{id}/enroll
+
 func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Request) {
+	// EnrollInCourse godoc
+	// @Summary Enroll in a course
+	// @Description Enroll a student in a course
+	// @Tags Enrollments
+	// @Accept json
+	// @Produce json
+	// @Param id path string true "Course ID"
+	// @Success 201 {object} dto.SuccessResponse{data=dto.EnrollmentDTO}
+	// @Failure 400 {object} dto.ErrorResponse
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 409 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /courses/{id}/enroll [post]
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 
@@ -52,7 +67,21 @@ func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Reques
 }
 
 // GET /api/students/{id}/courses
+
 func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Request) {
+	// GetStudentCourses godoc
+	// @Summary Get student courses
+	// @Description Get all courses a student is enrolled in
+	// @Tags Enrollments
+	// @Accept json
+	// @Produce json
+	// @Param id path string true "Student ID"
+	// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
+	// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /students/{id}/courses [get]
 	vars := mux.Vars(r)
 	studentID := vars["id"]
 
@@ -72,7 +101,21 @@ func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Req
 }
 
 // GET /api/courses/{id}/students
+
 func (h *EnrollmentHandler) GetCourseStudents(w http.ResponseWriter, r *http.Request) {
+	// GetCourseStudents godoc
+	// @Summary Get course students
+	// @Description Get all students enrolled in a course
+	// @Tags Enrollments
+	// @Accept json
+	// @Produce json
+	// @Param id path string true "Course ID"
+	// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
+	// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /courses/{id}/students [get]
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 

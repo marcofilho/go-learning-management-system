@@ -20,6 +20,19 @@ func NewCourseHandler(courseUseCase *usecase.CourseUseCase) *CourseHandler {
 	return &CourseHandler{courseUseCase: courseUseCase}
 }
 
+// CreateCourse godoc
+// @Summary Create a new course
+// @Description Create a new course (instructor only)
+// @Tags Courses
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateCourseRequest true "Course details"
+// @Success 201 {object} dto.SuccessResponse{data=dto.CourseDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /courses [post]
 func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
@@ -47,6 +60,17 @@ func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, MapEntityToCourseDTO(course))
 }
 
+// GetCourse godoc
+// @Summary Get course by ID
+// @Description Get course details by ID
+// @Tags Courses
+// @Accept json
+// @Produce json
+// @Param id path string true "Course ID"
+// @Success 200 {object} dto.SuccessResponse{data=dto.CourseDTO}
+// @Failure 404 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /courses/{id} [get]
 func (h *CourseHandler) GetCourse(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	courseID := vars["id"]
@@ -60,6 +84,21 @@ func (h *CourseHandler) GetCourse(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, MapEntityToCourseDTO(course))
 }
 
+// ListCourses godoc
+// @Summary List courses
+// @Description List courses with optional filters
+// @Tags Courses
+// @Accept json
+// @Produce json
+// @Param instructor_id query string false "Filter by instructor ID"
+// @Param difficulty_level query string false "Filter by difficulty level (beginner/intermediate/advanced)"
+// @Param active_only query boolean false "Show only active courses"
+// @Param limit query int false "Limit" default(10)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} dto.SuccessResponse{data=[]dto.CourseDTO}
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /courses [get]
 func (h *CourseHandler) ListCourses(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
 	instructorID := r.URL.Query().Get("instructor_id")
@@ -112,6 +151,22 @@ func (h *CourseHandler) ListCourses(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, response)
 }
 
+// UpdateCourse godoc
+// @Summary Update course
+// @Description Update course details (instructor only)
+// @Tags Courses
+// @Accept json
+// @Produce json
+// @Param id path string true "Course ID"
+// @Param request body dto.UpdateCourseRequest true "Course update details"
+// @Success 200 {object} dto.SuccessResponse{data=dto.CourseDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /courses/{id} [put]
 func (h *CourseHandler) UpdateCourse(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	courseID := vars["id"]
@@ -159,6 +214,20 @@ func (h *CourseHandler) UpdateCourse(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CourseHandler) DeleteCourse(w http.ResponseWriter, r *http.Request) {
+	// DeleteCourse godoc
+	// @Summary Delete course
+	// @Description Delete a course (instructor only)
+	// @Tags Courses
+	// @Accept json
+	// @Produce json
+	// @Param id path string true "Course ID"
+	// @Success 204
+	// @Failure 401 {object} dto.ErrorResponse
+	// @Failure 403 {object} dto.ErrorResponse
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /courses/{id} [delete]
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 

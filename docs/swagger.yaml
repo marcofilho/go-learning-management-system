@@ -1,0 +1,571 @@
+basePath: /api
+definitions:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      difficulty_level:
+        type: string
+      id:
+        type: string
+      instructor_id:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CreateCourseRequest:
+    properties:
+      description:
+        type: string
+      difficulty_level:
+        enum:
+        - beginner
+        - intermediate
+        - advanced
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      role:
+        enum:
+        - student
+        - instructor
+        - admin
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - role
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateCourseRequest:
+    properties:
+      description:
+        type: string
+      difficulty_level:
+        enum:
+        - beginner
+        - intermediate
+        - advanced
+        type: string
+      title:
+        type: string
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@lms.com
+    name: API Support
+  description: REST API for a Learning Management System with courses, modules, lessons,
+    and enrollments
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Learning Management System API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      summary: User login
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email, password, and role
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
+  /courses:
+    get:
+      consumes:
+      - application/json
+      description: List courses with optional filters
+      parameters:
+      - description: Filter by instructor ID
+        in: query
+        name: instructor_id
+        type: string
+      - description: Filter by difficulty level (beginner/intermediate/advanced)
+        in: query
+        name: difficulty_level
+        type: string
+      - description: Show only active courses
+        in: query
+        name: active_only
+        type: boolean
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List courses
+      tags:
+      - Courses
+    post:
+      consumes:
+      - application/json
+      description: Create a new course (instructor only)
+      parameters:
+      - description: Course details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CreateCourseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new course
+      tags:
+      - Courses
+  /courses/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get course details by ID
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get course by ID
+      tags:
+      - Courses
+    put:
+      consumes:
+      - application/json
+      description: Update course details (instructor only)
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Course update details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateCourseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update course
+      tags:
+      - Courses
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of users
+      parameters:
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all users
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      - application/json
+      description: |-
+        Get user details by ID
+        Get user details by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - Users
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update user details
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

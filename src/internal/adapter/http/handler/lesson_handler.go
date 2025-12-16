@@ -19,6 +19,21 @@ func NewLessonHandler(lessonUseCase *usecase.LessonUseCase) *LessonHandler {
 }
 
 func (h *LessonHandler) CreateLesson(w http.ResponseWriter, r *http.Request) {
+	// CreateLesson godoc
+	// @Summary Create a new lesson
+	// @Description Create a new lesson version 1 for a module (instructor only)
+	// @Tags Lessons
+	// @Accept json
+	// @Produce json
+	// @Param moduleId path string true "Module ID"
+	// @Param request body dto.CreateLessonRequest true "Lesson details"
+	// @Success 201 {object} dto.SuccessResponse{data=dto.LessonVersionDTO}
+	// @Failure 400 {object} dto.ErrorResponse
+	// @Failure 403 {object} dto.ErrorResponse
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /modules/{moduleId}/lessons [post]
 	vars := mux.Vars(r)
 	moduleID := vars["moduleId"]
 
@@ -60,6 +75,36 @@ func (h *LessonHandler) CreateLesson(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LessonHandler) CreateLessonVersion(w http.ResponseWriter, r *http.Request) {
+	// CreateLessonVersion godoc
+	// @Summary Create a new lesson version
+	// @Description Create a new version of an existing lesson (instructor only)
+	// @Tags Lessons
+	// @Accept json
+	// @Produce json
+	// @Param lessonId path string true "Lesson ID (any version)"
+	// @Param request body dto.CreateLessonVersionRequest true "Lesson version details"
+	// @Success 201 {object} dto.SuccessResponse{data=dto.LessonVersionDTO}
+	// @Failure 400 {object} dto.ErrorResponse
+	// @Failure 403 {object} dto.ErrorResponse
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /lessons/{lessonId}/version [post]
+	// CreateLesson godoc
+	// @Summary Create a new lesson
+	// @Description Create a new lesson version 1 for a module (instructor only)
+	// @Tags Lessons
+	// @Accept json
+	// @Produce json
+	// @Param moduleId path string true "Module ID"
+	// @Param request body dto.CreateLessonRequest true "Lesson details"
+	// @Success 201 {object} dto.SuccessResponse{data=dto.LessonVersionDTO}
+	// @Failure 400 {object} dto.ErrorResponse
+	// @Failure 403 {object} dto.ErrorResponse
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /modules/{moduleId}/lessons [post]
 	vars := mux.Vars(r)
 	lessonID := vars["lessonId"]
 
@@ -100,6 +145,18 @@ func (h *LessonHandler) CreateLessonVersion(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *LessonHandler) GetModuleLessons(w http.ResponseWriter, r *http.Request) {
+	// GetModuleLessons godoc
+	// @Summary Get module lessons
+	// @Description Get latest version of all lessons in a module
+	// @Tags Lessons
+	// @Accept json
+	// @Produce json
+	// @Param moduleId path string true "Module ID"
+	// @Success 200 {object} dto.SuccessResponse{data=[]dto.LessonVersionDTO}
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /modules/{moduleId}/lessons [get]
 	vars := mux.Vars(r)
 	moduleID := vars["moduleId"]
 
@@ -126,6 +183,18 @@ func (h *LessonHandler) GetModuleLessons(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Request) {
+	// GetAllLessonVersions godoc
+	// @Summary Get all lesson versions
+	// @Description Get all versions of a specific lesson
+	// @Tags Lessons
+	// @Accept json
+	// @Produce json
+	// @Param lessonId path string true "Lesson ID (any version)"
+	// @Success 200 {object} dto.SuccessResponse{data=[]dto.LessonVersionDTO}
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /lessons/{lessonId}/all-versions [get]
 	vars := mux.Vars(r)
 	lessonID := vars["lessonId"]
 
@@ -152,6 +221,19 @@ func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *LessonHandler) DeleteLesson(w http.ResponseWriter, r *http.Request) {
+	// DeleteLesson godoc
+	// @Summary Delete lesson
+	// @Description Delete all versions of a lesson (instructor only)
+	// @Tags Lessons
+	// @Accept json
+	// @Produce json
+	// @Param lessonId path string true "Lesson ID (any version)"
+	// @Success 204
+	// @Failure 403 {object} dto.ErrorResponse
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /lessons/{lessonId} [delete]
 	vars := mux.Vars(r)
 	lessonID := vars["lessonId"]
 

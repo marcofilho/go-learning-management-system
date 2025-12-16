@@ -13,6 +13,25 @@ import (
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/usecase"
 )
 
+// @title Learning Management System API
+// @version 1.0
+// @description REST API for a Learning Management System with courses, modules, lessons, and enrollments
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@lms.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token
+
 func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {

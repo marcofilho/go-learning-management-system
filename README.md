@@ -1,2 +1,217 @@
-# go-learning-management-system
-A Golang project with an an API for a Learning Management System, where students enroll in courses, instructors manage course content, and an external certification provider sends webhook updates.
+# Go Learning Management System
+
+A Golang REST API for a Learning Management System, where students enroll in courses, instructors manage course content (modules and lessons with versioning), and an external certification provider sends webhook updates.
+
+## Features
+
+- **User Management**: Authentication and authorization with JWT
+- **Course Management**: Create and manage courses with difficulty levels
+- **Module & Lesson System**: Organize content in modules with versioned lessons
+- **Enrollment System**: Students enroll in courses with status tracking
+- **Role-based Access Control**: Admin, Instructor, and Student roles
+- **Clean Architecture**: Organized code structure with domain-driven design
+
+## Tech Stack
+
+- **Go 1.21+**: Programming language
+- **PostgreSQL**: Database
+- **GORM**: ORM for database operations
+- **Gorilla Mux**: HTTP router
+- **JWT**: Token-based authentication
+- **Docker**: Containerization
+
+## Quick Start
+
+### Prerequisites
+
+- Go 1.21 or higher
+- Docker and Docker Compose
+- Make (optional)
+
+### Using Docker Compose (Recommended)
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/go-learning-management-system.git
+cd go-learning-management-system
+```
+
+2. Copy the environment file:
+```bash
+cp .env.example .env
+```
+
+3. Start the services:
+```bash
+make docker-up
+# or
+docker-compose up -d
+```
+
+4. The API will be available at `http://localhost:8080`
+   - Swagger documentation: `http://localhost:8080/swagger/index.html`
+
+5. Stop the services:
+```bash
+make docker-down
+# or
+docker-compose down
+```
+
+### Local Development
+
+1. Ensure PostgreSQL is running locally
+
+2. Copy and configure environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your local database credentials
+```
+
+3. Install dependencies:
+```bash
+go mod download
+```
+
+4. Run the application:
+```bash
+make run
+# or
+go run ./src/cmd/api
+```
+
+## Available Make Commands
+
+```bash
+make help           # Show all available commands
+make build          # Build the application
+make run            # Run the application locally
+make test           # Run tests with coverage
+make swagger        # Generate Swagger documentation
+make fmt            # Format code
+make lint           # Run linter
+make docker-build   # Build Docker image
+make docker-up      # Start services with Docker Compose
+make docker-down    # Stop Docker services
+make docker-logs    # View API logs
+make dev            # Run with hot reload (requires air)
+make db-shell       # Open PostgreSQL shell
+```
+
+## API Documentation
+
+Interactive Swagger documentation is available at `/swagger/index.html` when the server is running.
+
+Access it at: `http://localhost:8080/swagger/index.html`
+
+The documentation includes:
+- All available endpoints with request/response examples
+- Authentication requirements
+- Request parameter descriptions
+- Interactive API testing interface
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+
+### Courses
+- `GET /api/courses` - List courses (with filters)
+- `GET /api/courses/:id` - Get course details
+- `POST /api/courses` - Create course (instructor only)
+- `PUT /api/courses/:id` - Update course (instructor only)
+- `DELETE /api/courses/:id` - Delete course (instructor only)
+
+### Modules
+- `GET /api/courses/:courseId/modules` - List course modules
+- `GET /api/modules/:id` - Get module details
+- `POST /api/courses/:courseId/modules` - Create module (instructor only)
+- `PUT /api/modules/:id` - Update module (instructor only)
+- `DELETE /api/modules/:id` - Delete module (instructor only)
+
+### Lessons
+- `GET /api/modules/:moduleId/lessons` - Get latest lessons for module
+- `GET /api/lessons/:id/versions` - Get all versions of a lesson
+- `POST /api/modules/:moduleId/lessons` - Create lesson (instructor only)
+- `POST /api/lessons/:lessonId/version` - Create new lesson version (instructor only)
+- `DELETE /api/lessons/:id` - Delete lesson (instructor only)
+
+### Enrollments
+- `POST /api/courses/:id/enroll` - Enroll in course
+- `GET /api/students/:id/courses` - Get student's courses
+- `GET /api/courses/:id/students` - Get course's students
+- `PUT /api/enrollments/:courseId/status` - Update enrollment status
+- `DELETE /api/enrollments/:courseId` - Drop course
+
+## Project Structure
+
+```
+.
+├── src/
+│   ├── cmd/
+│   │   └── api/          # Application entry point
+│   ├── internal/
+│   │   ├── adapter/
+│   │   │   └── http/     # HTTP handlers and DTOs
+│   │   ├── domain/
+│   │   │   ├── entity/   # Domain entities
+│   │   │   └── repository/ # Repository interfaces
+│   │   └── infrastructure/
+│   │       ├── database/ # Database setup
+│   │       └── repository/ # Repository implementations
+│   ├── middleware/        # HTTP middleware
+│   └── usecase/          # Business logic
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+└── README.md
+```
+
+## Environment Variables
+
+See [.env.example](.env.example) for all available configuration options:
+
+- `DB_HOST`: Database host (default: localhost)
+- `DB_PORT`: Database port (default: 5432)
+- `DB_USER`: Database user
+- `DB_PASSWORD`: Database password
+- `DB_NAME`: Database name
+- `SERVER_HOST`: API server host (default: 0.0.0.0)
+- `SERVER_PORT`: API server port (default: 8080)
+- `JWT_SECRET`: Secret key for JWT tokens
+- `JWT_EXPIRATION_HOURS`: Token expiration time (default: 24)
+
+## Database Migrations
+
+The application uses GORM's AutoMigrate feature. Migrations run automatically when the application starts. All tables and indexes are created based on the entity definitions.
+
+## Development
+
+### Running Tests
+
+```bash
+make test
+# or
+go test -v -cover ./...
+```
+
+### Code Formatting
+
+```bash
+make fmt
+# or
+go fmt ./...
+```
+
+### Linting
+
+```bash
+make lint
+# or
+golangci-lint run
+```
+
+## License
+
+MIT License

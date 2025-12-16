@@ -21,6 +21,18 @@ func NewUserHandler(userUseCase *usecase.UserUseCase) *UserHandler {
 	return &UserHandler{userUseCase: userUseCase}
 }
 
+// Register godoc
+// @Summary Register a new user
+// @Description Register a new user with email, password, and role
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.RegisterRequest true "Registration details"
+// @Success 201 {object} dto.SuccessResponse{data=dto.UserDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /auth/register [post]
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -44,6 +56,18 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Login godoc
+// @Summary User login
+// @Description Authenticate user and return JWT token
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "Login credentials"
+// @Success 200 {object} dto.SuccessResponse{data=dto.LoginResponse}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /auth/login [post]
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -66,6 +90,28 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetUserByID godoc
+// @Summary Get user by ID
+// @Description Get user details by ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} dto.SuccessResponse{data=dto.UserDTO}
+// @Failure 404 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{id} [get]
+// GetUserByID godoc
+// @Summary Get user by ID
+// @Description Get user details by ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} dto.SuccessResponse{data=dto.UserDTO}
+// @Failure 404 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -78,6 +124,18 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	RespondWithJSON(w, http.StatusOK, userDTO)
 }
 
+// ListUsers godoc
+// @Summary List all users
+// @Description Get a paginated list of users
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit" default(10)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} dto.SuccessResponse{data=[]dto.UserDTO}
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users [get]
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
@@ -105,6 +163,21 @@ func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	RespondWithJSON(w, http.StatusOK, userDTOs)
 }
 
+// UpdateUser godoc
+// @Summary Update user
+// @Description Update user details
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param request body dto.UpdateUserRequest true "User update details"
+// @Success 200 {object} dto.SuccessResponse{data=dto.UserDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -147,6 +220,19 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	RespondWithJSON(w, http.StatusOK, userDTO)
 }
 
+// DeleteUser godoc
+// @Summary Delete user
+// @Description Delete a user by ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} dto.SuccessResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
