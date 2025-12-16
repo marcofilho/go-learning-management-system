@@ -20,6 +20,12 @@ help:
 start:
 	@echo "🚀 Starting Learning Management System..."
 	@echo ""
+	@if [ ! -f .env ]; then \
+		echo "⚙️  Creating .env file from .env.example..."; \
+		cp .env.example .env; \
+		echo "✅ .env file created!"; \
+		echo ""; \
+	fi
 	@echo "📦 Starting Docker containers..."
 	@docker-compose up -d
 	@echo ""
