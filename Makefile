@@ -1,8 +1,9 @@
-.PHONY: help build run test clean docker-build docker-up docker-down migrate fmt lint swagger
+.PHONY: help start build run test clean docker-build docker-up docker-down migrate fmt lint swagger
 
 # Default target
 help:
 	@echo "Available targets:"
+	@echo "  make start        - 🚀 Start the entire project (Docker + open Swagger)"
 	@echo "  make build        - Build the application binary"
 	@echo "  make run          - Run the application locally"
 	@echo "  make test         - Run tests"
@@ -14,6 +15,36 @@ help:
 	@echo "  make fmt          - Format Go code"
 	@echo "  make lint         - Run linter"
 	@echo "  make migrate      - Run database migrations"
+
+# Start the entire project
+start:
+	@echo "🚀 Starting Learning Management System..."
+	@echo ""
+	@echo "📦 Starting Docker containers..."
+	@docker-compose up -d
+	@echo ""
+	@echo "⏳ Waiting for services to be ready..."
+	@sleep 5
+	@echo ""
+	@echo "🔍 Checking API health..."
+	@until curl -s http://localhost:8080/api/health > /dev/null 2>&1; do \
+		echo "   Waiting for API to be ready..."; \
+		sleep 2; \
+	done
+	@echo ""
+	@echo "✅ All services are running!"
+	@echo ""
+	@echo "📚 API Documentation: http://localhost:8080/swagger/index.html"
+	@echo "🏥 Health Check:      http://localhost:8080/api/health"
+	@echo ""
+	@echo "Opening Swagger UI in your browser..."
+	@sleep 1
+	@open http://localhost:8080/swagger/index.html 2>/dev/null || xdg-open http://localhost:8080/swagger/index.html 2>/dev/null || echo "Please open http://localhost:8080/swagger/index.html in your browser"
+	@echo ""
+	@echo "💡 Useful commands:"
+	@echo "   make docker-logs  - View API logs"
+	@echo "   make docker-down  - Stop all services"
+	@echo ""
 
 # Build the application
 build:

@@ -41,7 +41,17 @@ cd go-learning-management-system
 cp .env.example .env
 ```
 
-3. Start the services:
+3. Start the entire project (recommended):
+```bash
+make start
+```
+This will:
+- Start Docker containers (PostgreSQL + API)
+- Wait for services to be ready
+- Run database migrations automatically
+- Open Swagger UI in your browser
+
+**Alternative:** Start services without opening browser:
 ```bash
 make docker-up
 # or
@@ -50,6 +60,7 @@ docker-compose up -d
 
 4. The API will be available at `http://localhost:8080`
    - Swagger documentation: `http://localhost:8080/swagger/index.html`
+   - Health check: `http://localhost:8080/api/health`
 
 5. Stop the services:
 ```bash
@@ -83,6 +94,7 @@ go run ./src/cmd/api
 ## Available Make Commands
 
 ```bash
+make start          # 🚀 Start the entire project (Docker + open Swagger)
 make help           # Show all available commands
 make build          # Build the application
 make run            # Run the application locally
