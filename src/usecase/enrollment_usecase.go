@@ -23,12 +23,10 @@ func NewEnrollmentUseCase(enrollmentRepo repository.EnrollmentRepository, course
 }
 
 func (uc *EnrollmentUseCase) EnrollStudent(ctx context.Context, studentID, courseID, requestorID string) (*entity.Enrollment, error) {
-	// Verify course exists
 	if _, err := uc.courseRepo.GetByID(ctx, courseID); err != nil {
 		return nil, err
 	}
 
-	// Verify student exists and is active
 	student, err := uc.userRepo.GetByID(ctx, studentID)
 	if err != nil {
 		return nil, err
@@ -38,12 +36,10 @@ func (uc *EnrollmentUseCase) EnrollStudent(ctx context.Context, studentID, cours
 		return nil, entity.ErrUnauthorized
 	}
 
-	// Students must have role student
 	if student.Role != entity.UserRoleStudent {
 		return nil, entity.ErrInvalidInput
 	}
 
-	// Check authorization: students can enroll themselves, admins can enroll anyone
 	requestor, err := uc.userRepo.GetByID(ctx, requestorID)
 	if err != nil {
 		return nil, err
@@ -53,7 +49,6 @@ func (uc *EnrollmentUseCase) EnrollStudent(ctx context.Context, studentID, cours
 		return nil, entity.ErrUnauthorized
 	}
 
-	// Check if already enrolled
 	existing, _ := uc.enrollmentRepo.GetByStudentAndCourse(ctx, studentID, courseID)
 	if existing != nil {
 		return nil, entity.ErrAlreadyEnrolled

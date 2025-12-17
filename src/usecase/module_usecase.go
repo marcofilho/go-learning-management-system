@@ -47,14 +47,12 @@ func (uc *ModuleUseCase) GetModule(ctx context.Context, id string) (*entity.Modu
 }
 
 func (uc *ModuleUseCase) UpdateModule(ctx context.Context, module *entity.Module, instructorID string) error {
-	// Get existing module to check course ownership
-	existing, err := uc.moduleRepo.GetByID(ctx, module.ID)
+	existingModule, err := uc.moduleRepo.GetByID(ctx, module.ID)
 	if err != nil {
 		return err
 	}
 
-	// Verify instructor owns the course
-	course, err := uc.courseRepo.GetByID(ctx, existing.CourseID)
+	course, err := uc.courseRepo.GetByID(ctx, existingModule.CourseID)
 	if err != nil {
 		return err
 	}
@@ -67,13 +65,11 @@ func (uc *ModuleUseCase) UpdateModule(ctx context.Context, module *entity.Module
 }
 
 func (uc *ModuleUseCase) DeleteModule(ctx context.Context, id string, instructorID string) error {
-	// Get existing module to check course ownership
 	existing, err := uc.moduleRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	// Verify instructor owns the course
 	course, err := uc.courseRepo.GetByID(ctx, existing.CourseID)
 	if err != nil {
 		return err

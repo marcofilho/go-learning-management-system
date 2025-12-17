@@ -38,7 +38,6 @@ func RequireCourseOwnership(courseRepo repository.CourseRepository) func(http.Ha
 				return
 			}
 
-			// Get course and verify ownership
 			course, err := courseRepo.GetByID(r.Context(), courseID)
 			if err != nil {
 				if err == entity.ErrNotFound {
@@ -69,13 +68,11 @@ func RequireEnrollment(courseRepo repository.CourseRepository, enrollmentRepo re
 				return
 			}
 
-			// Admin can access everything
 			if claims.Role == entity.UserRoleAdmin {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Get course ID from URL
 			vars := mux.Vars(r)
 			courseID := vars["id"]
 			if courseID == "" {
@@ -87,7 +84,6 @@ func RequireEnrollment(courseRepo repository.CourseRepository, enrollmentRepo re
 				return
 			}
 
-			// Get course
 			course, err := courseRepo.GetByID(r.Context(), courseID)
 			if err != nil {
 				if err == entity.ErrNotFound {
@@ -98,13 +94,11 @@ func RequireEnrollment(courseRepo repository.CourseRepository, enrollmentRepo re
 				return
 			}
 
-			// Instructors can access their own courses
 			if claims.Role == entity.UserRoleInstructor && course.InstructorID == claims.UserID {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Students must be enrolled
 			if claims.Role == entity.UserRoleStudent {
 				enrollment, err := enrollmentRepo.GetByStudentAndCourse(r.Context(), claims.UserID, courseID)
 				if err != nil || enrollment == nil || !enrollment.IsActive() {
@@ -128,13 +122,11 @@ func RequireModuleOwnership(moduleRepo repository.ModuleRepository, courseRepo r
 				return
 			}
 
-			// Admin can access everything
 			if claims.Role == entity.UserRoleAdmin {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Get module ID from URL
 			vars := mux.Vars(r)
 			moduleID := vars["id"]
 			if moduleID == "" {
@@ -146,7 +138,6 @@ func RequireModuleOwnership(moduleRepo repository.ModuleRepository, courseRepo r
 				return
 			}
 
-			// Get module
 			module, err := moduleRepo.GetByID(r.Context(), moduleID)
 			if err != nil {
 				if err == entity.ErrNotFound {
@@ -157,7 +148,6 @@ func RequireModuleOwnership(moduleRepo repository.ModuleRepository, courseRepo r
 				return
 			}
 
-			// Get course and verify ownership
 			course, err := courseRepo.GetByID(r.Context(), module.CourseID)
 			if err != nil {
 				respondWithError(w, http.StatusInternalServerError, err, "Failed to verify course ownership")
@@ -184,13 +174,11 @@ func RequireAdminOrSelf() func(http.Handler) http.Handler {
 				return
 			}
 
-			// Admin can access everything
 			if claims.Role == entity.UserRoleAdmin {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Get user ID from URL
 			vars := mux.Vars(r)
 			userID := vars["id"]
 
@@ -199,7 +187,6 @@ func RequireAdminOrSelf() func(http.Handler) http.Handler {
 				return
 			}
 
-			// User can only access their own resource
 			if claims.UserID != userID {
 				respondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "You can only access your own resources")
 				return

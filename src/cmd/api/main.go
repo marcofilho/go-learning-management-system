@@ -53,7 +53,6 @@ func main() {
 	}
 	log.Println("✅ Migrations completed")
 
-	// Repositories
 	userRepo := repository.NewPostgresUserRepository(gormDB)
 	courseRepo := repository.NewPostgresCourseRepository(gormDB)
 	enrollmentRepo := repository.NewPostgresEnrollmentRepository(gormDB)
@@ -62,14 +61,12 @@ func main() {
 
 	tokenProvider := auth.NewJWTProvider(&cfg.JWT)
 
-	// Use Cases
 	userUseCase := usecase.NewUserUseCase(userRepo, tokenProvider)
 	courseUseCase := usecase.NewCourseUseCase(courseRepo, userRepo)
 	enrollmentUseCase := usecase.NewEnrollmentUseCase(enrollmentRepo, courseRepo, userRepo)
 	moduleUseCase := usecase.NewModuleUseCase(moduleRepo, courseRepo)
 	lessonUseCase := usecase.NewLessonUseCase(lessonRepo, moduleRepo, courseRepo)
 
-	// Handlers
 	userHandler := handler.NewUserHandler(userUseCase)
 	courseHandler := handler.NewCourseHandler(courseUseCase)
 	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentUseCase)
