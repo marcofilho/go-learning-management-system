@@ -43,7 +43,7 @@ func (h *ModuleHandler) CreateModule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -134,7 +134,7 @@ func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -187,7 +187,7 @@ func (h *ModuleHandler) DeleteModule(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	moduleID := vars["id"]
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return

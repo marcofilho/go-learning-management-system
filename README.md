@@ -5,10 +5,16 @@ A Golang REST API for a Learning Management System, where students enroll in cou
 ## Features
 
 - **User Management**: Authentication and authorization with JWT
+- **Role-Based Access Control (RBAC)**: Comprehensive permission system for Admin, Instructor, and Student roles
+  - Admins: Full system access
+  - Instructors: Manage their own courses, modules, and lessons
+  - Students: Self-enroll and access enrolled course content
+  - See [RBAC.md](RBAC.md) for complete documentation
 - **Course Management**: Create and manage courses with difficulty levels
 - **Module & Lesson System**: Organize content in modules with versioned lessons
 - **Enrollment System**: Students enroll in courses with status tracking
-- **Role-based Access Control**: Admin, Instructor, and Student roles
+- **Ownership Controls**: Instructors can only modify their own content
+- **Swagger Documentation**: Interactive API documentation and testing
 - **Clean Architecture**: Organized code structure with domain-driven design
 
 ## Tech Stack
@@ -118,9 +124,23 @@ Access it at: `http://localhost:8080/swagger/index.html`
 
 The documentation includes:
 - All available endpoints with request/response examples
-- Authentication requirements
+- Authentication requirements (JWT Bearer token)
+- Role-based access control information
 - Request parameter descriptions
 - Interactive API testing interface
+
+### Authentication & Authorization
+
+All protected endpoints require a JWT token in the `Authorization` header:
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+See [RBAC.md](RBAC.md) for detailed information about:
+- User roles and permissions
+- Endpoint access requirements
+- Testing different permission scenarios
+- Security best practices
 
 ## API Endpoints
 

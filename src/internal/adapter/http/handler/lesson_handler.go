@@ -43,7 +43,7 @@ func (h *LessonHandler) CreateLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -114,7 +114,7 @@ func (h *LessonHandler) CreateLessonVersion(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -237,7 +237,7 @@ func (h *LessonHandler) DeleteLesson(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	lessonID := vars["lessonId"]
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return

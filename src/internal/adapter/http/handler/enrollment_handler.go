@@ -40,7 +40,7 @@ func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return

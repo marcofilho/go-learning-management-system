@@ -34,7 +34,7 @@ func NewCourseHandler(courseUseCase *usecase.CourseUseCase) *CourseHandler {
 // @Security BearerAuth
 // @Router /courses [post]
 func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -171,7 +171,7 @@ func (h *CourseHandler) UpdateCourse(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -231,7 +231,7 @@ func (h *CourseHandler) DeleteCourse(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 
-	userID, ok := r.Context().Value("userID").(string)
+	userID, ok := GetUserIDFromContext(r)
 	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return

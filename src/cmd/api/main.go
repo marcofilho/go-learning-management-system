@@ -76,7 +76,7 @@ func main() {
 	moduleHandler := handler.NewModuleHandler(moduleUseCase)
 	lessonHandler := handler.NewLessonHandler(lessonUseCase)
 
-	router := SetupRoutes(userHandler, courseHandler, enrollmentHandler, moduleHandler, lessonHandler, tokenProvider)
+	router := SetupRoutes(userHandler, courseHandler, enrollmentHandler, moduleHandler, lessonHandler, tokenProvider, courseRepo, enrollmentRepo, moduleRepo)
 
 	router = middleware.LoggerMiddleware(router)
 	router = middleware.CORSMiddleware(router)

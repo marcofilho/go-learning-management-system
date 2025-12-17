@@ -43,7 +43,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginRequest"
+                            "$ref": "#/definitions/dto.LoginRequest"
                         }
                     }
                 ],
@@ -53,13 +53,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginResponse"
+                                            "$ref": "#/definitions/dto.LoginResponse"
                                         }
                                     }
                                 }
@@ -69,19 +69,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -107,7 +107,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.RegisterRequest"
+                            "$ref": "#/definitions/dto.RegisterRequest"
                         }
                     }
                 ],
@@ -117,13 +117,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO"
+                                            "$ref": "#/definitions/dto.UserDTO"
                                         }
                                     }
                                 }
@@ -133,19 +133,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -209,7 +209,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -217,7 +217,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO"
+                                                "$ref": "#/definitions/dto.CourseDTO"
                                             }
                                         }
                                     }
@@ -228,7 +228,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -257,7 +257,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CreateCourseRequest"
+                            "$ref": "#/definitions/dto.CreateCourseRequest"
                         }
                     }
                 ],
@@ -267,13 +267,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO"
+                                            "$ref": "#/definitions/dto.CourseDTO"
                                         }
                                     }
                                 }
@@ -283,19 +283,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -334,13 +334,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO"
+                                            "$ref": "#/definitions/dto.CourseDTO"
                                         }
                                     }
                                 }
@@ -350,7 +350,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -386,7 +386,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateCourseRequest"
+                            "$ref": "#/definitions/dto.UpdateCourseRequest"
                         }
                     }
                 ],
@@ -396,13 +396,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO"
+                                            "$ref": "#/definitions/dto.CourseDTO"
                                         }
                                     }
                                 }
@@ -412,31 +412,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -482,7 +482,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -490,7 +490,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO"
+                                                "$ref": "#/definitions/dto.UserDTO"
                                             }
                                         }
                                     }
@@ -501,7 +501,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -553,13 +553,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO"
+                                            "$ref": "#/definitions/dto.UserDTO"
                                         }
                                     }
                                 }
@@ -569,7 +569,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -605,7 +605,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateUserRequest"
+                            "$ref": "#/definitions/dto.UpdateUserRequest"
                         }
                     }
                 ],
@@ -615,13 +615,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                                    "$ref": "#/definitions/dto.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO"
+                                            "$ref": "#/definitions/dto.UserDTO"
                                         }
                                     }
                                 }
@@ -631,25 +631,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -684,25 +684,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse"
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -710,7 +710,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO": {
+        "dto.CourseDTO": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -736,7 +736,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CreateCourseRequest": {
+        "dto.CreateCourseRequest": {
             "type": "object",
             "required": [
                 "title"
@@ -758,7 +758,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse": {
+        "dto.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -769,7 +769,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginRequest": {
+        "dto.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -784,18 +784,18 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginResponse": {
+        "dto.LoginResponse": {
             "type": "object",
             "properties": {
                 "token": {
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO"
+                    "$ref": "#/definitions/dto.UserDTO"
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.RegisterRequest": {
+        "dto.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -828,7 +828,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse": {
+        "dto.SuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -837,7 +837,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateCourseRequest": {
+        "dto.UpdateCourseRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -856,7 +856,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateUserRequest": {
+        "dto.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -873,7 +873,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO": {
+        "dto.UserDTO": {
             "type": "object",
             "properties": {
                 "created_at": {
