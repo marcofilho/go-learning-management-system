@@ -9,9 +9,44 @@ This is a quick reference for testing the newly implemented Role-Based Access Co
 make start
 ```
 
-### 2. Register Test Users
+### 2. Bootstrap First Admin
 
-**Register a Student (default role):**
+Since only admins can create admin/instructor accounts, you need to bootstrap the first admin:
+
+```bash
+# Register as student first
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@test.com",
+    "password": "password123",
+    "first_name": "Admin",
+    "last_name": "User"
+  }'
+
+# Manually update role in database
+make db-shell
+
+# In PostgreSQL shell:
+UPDATE users SET role = 'admin' WHERE email = 'admin@test.com';
+\q
+```
+
+### 3. Login as Admin and Get Token
+
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@test.com",
+    "password": "password123"
+  }'
+```
+Save the returned token as `$ADMIN_TOKEN`
+
+### 4. Create Test Users (Using Admin Token)
+
+**Register a Student (public, no auth needed):**
 ```bash
 curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
@@ -23,43 +58,21 @@ curl -X POST http://localhost:8080/api/auth/register \
   }'
 ```
 
-**Register an Instructor:**
+**Register an Instructor (requires admin token):**
 ```bash
 curl -X POST http://localhost:8080/api/auth/register \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "instructor@test.com",
     "password": "password123",
     "first_name": "Jane",
-    "last_name": "Instructor"
+    "last_name": "Instructor",
+    "role": "instructor"
   }'
 ```
 
-**Register an Admin:**
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "admin@test.com",
-    "password": "password123",
-    "first_name": "Admin",
-    "last_name": "User"
-  }'
-```
-
-### 3. Update Roles in Database
-
-Connect to the database and update roles:
-```bash
-make db-shell
-
-# In PostgreSQL shell:
-UPDATE users SET role = 'instructor' WHERE email = 'instructor@test.com';
-UPDATE users SET role = 'admin' WHERE email = 'admin@test.com';
-\q
-```
-
-### 4. Login and Get Tokens
+### 5. Login and Get Additional Tokens
 
 **Login as Student:**
 ```bash
@@ -95,6 +108,55 @@ curl -X POST http://localhost:8080/api/auth/login \
 Save the returned token as `$ADMIN_TOKEN`
 
 ## Test Scenarios
+
+### Scenario 0: Privilege Escalation Prevention ❌
+
+**Non-admin cannot create admin account:**
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Authorization: Bearer $STUDENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "hacker@test.com",
+    "password": "password123",
+    "first_name": "Hacker",
+    "last_name": "User",
+    "role": "admin"
+  }'
+
+# Expected: 403 Forbidden - "Only administrators can create admin or instructor accounts"
+```
+
+**Anonymous user cannot create admin account:**
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "hacker2@test.com",
+    "password": "password123",
+    "first_name": "Hacker",
+    "last_name": "Two",
+    "role": "admin"
+  }'
+
+# Expected: 403 Forbidden - "Only administrators can create admin or instructor accounts"
+```
+
+**Only admin can create instructor/admin:**
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newadmin@test.com",
+    "password": "password123",
+    "first_name": "New",
+    "last_name": "Admin",
+    "role": "admin"
+  }'
+
+# Expected: 201 Created ✅
+```
 
 ### Scenario 1: Student Cannot Create Course ❌
 

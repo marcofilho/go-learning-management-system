@@ -89,7 +89,12 @@ const docTemplate = `{
         },
         "/auth/register": {
             "post": {
-                "description": "Register a new user with email, password, and role",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Register a new user with email, password, and role. Only admins can create admin or instructor users. Public registration defaults to student role.",
                 "consumes": [
                     "application/json"
                 ],
@@ -132,6 +137,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -801,8 +812,7 @@ const docTemplate = `{
                 "email",
                 "first_name",
                 "last_name",
-                "password",
-                "role"
+                "password"
             ],
             "properties": {
                 "email": {
@@ -819,6 +829,7 @@ const docTemplate = `{
                     "minLength": 8
                 },
                 "role": {
+                    "description": "Optional, defaults to student",
                     "type": "string",
                     "enum": [
                         "student",

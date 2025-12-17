@@ -23,15 +23,17 @@ func NewUserHandler(userUseCase *usecase.UserUseCase) *UserHandler {
 
 // Register godoc
 // @Summary Register a new user
-// @Description Register a new user with email, password, and role
+// @Description Register a new user with email, password, and role. Only admins can create admin or instructor users. Public registration defaults to student role.
 // @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param request body dto.RegisterRequest true "Registration details"
 // @Success 201 {object} dto.SuccessResponse{data=dto.UserDTO}
 // @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
 // @Failure 409 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
 // @Router /auth/register [post]
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
@@ -39,7 +41,23 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, err, "Invalid request body")
 		return
 	}
-	role := entity.UserRole(req.Role)
+
+	// Default to student role if not specified
+	role := entity.UserRoleStudent
+	if req.Role != "" {
+		role = entity.UserRole(req.Role)
+	}
+
+	// Only admins can create admin or instructor users
+	if role == entity.UserRoleAdmin || role == entity.UserRoleInstructor {
+		// Check if request has authentication
+		claims, ok := r.Context().Value(middleware.UserContextKey).(*auth.Claims)
+		if !ok || claims.Role != entity.UserRoleAdmin {
+			RespondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "Only administrators can create admin or instructor accounts")
+			return
+		}
+	}
+
 	user, err := h.userUseCase.Register(r.Context(), req.Email, req.Password, req.FirstName, req.LastName, role)
 	if err != nil {
 		if err == entity.ErrDuplicateEntry {

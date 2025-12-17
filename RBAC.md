@@ -93,13 +93,24 @@ middleware.RequireModuleOwnership(moduleRepo, courseRepo)
 middleware.RequireAdminOrSelf()
 ```
 
+### 7. OptionalAuthMiddleware
+**Purpose**: Allows public access but extracts authentication if provided  
+**Location**: `src/internal/adapter/http/middleware/optional_auth.go`
+
+```go
+middleware.OptionalAuthMiddleware(tokenProvider)
+```
+
 ## API Endpoints & Required Permissions
 
-### Authentication (Public)
+### Authentication
 ```
-POST /api/auth/register - Public (creates student account)
+POST /api/auth/register - Public for student registration
+                        - Requires Admin token to create instructor/admin accounts
 POST /api/auth/login    - Public
 ```
+
+**Important**: The registration endpoint is public for creating student accounts, but creating admin or instructor accounts requires an existing admin to be authenticated. If you include a role of "admin" or "instructor" in the request without admin authentication, you'll receive a 403 Forbidden error.
 
 ### Users
 ```
@@ -201,25 +212,48 @@ The JWT token includes the following claims:
 
 ### 1. Register Users with Different Roles
 
-**Create Admin** (requires database access):
+**Create First Admin** (requires database access for bootstrap):
 ```sql
+-- Register a regular user first, then update their role
 UPDATE users SET role = 'admin' WHERE email = 'admin@example.com';
 ```
 
-**Create Instructor**:
-```sql
-UPDATE users SET role = 'instructor' WHERE email = 'instructor@example.com';
+**Create Additional Admin** (requires existing admin token):
+```bash
+POST /api/auth/register
+Authorization: Bearer <admin-token>
+{
+  "email": "newadmin@example.com",
+  "password": "password123",
+  "first_name": "New",
+  "last_name": "Admin",
+  "role": "admin"
+}
 ```
 
-**Create Student** (default):
+**Create Instructor** (requires admin token):
+```bash
+POST /api/auth/register
+Authorization: Bearer <admin-token>
+{
+  "email": "instructor@example.com",
+  "password": "password123",
+  "first_name": "Jane",
+  "last_name": "Instructor",
+  "role": "instructor"
+}
+```
+
+**Create Student** (public, no auth required):
 ```bash
 POST /api/auth/register
 {
   "email": "student@example.com",
-  "password": "password",
+  "password": "password123",
   "first_name": "John",
   "last_name": "Doe"
 }
+# Role defaults to "student" if not specified
 ```
 
 ### 2. Login and Get Token

@@ -38,8 +38,9 @@ func SetupRoutes(
 		w.Write([]byte("OK"))
 	}).Methods(http.MethodGet)
 
-	// Authentication routes (public)
-	api.HandleFunc("/auth/register", userHandler.Register).Methods(http.MethodPost)
+	// Authentication routes
+	// Register: Public for students, requires admin auth for instructor/admin creation
+	api.Handle("/auth/register", middleware.OptionalAuthMiddleware(tokenProvider)(http.HandlerFunc(userHandler.Register))).Methods(http.MethodPost)
 	api.HandleFunc("/auth/login", userHandler.Login).Methods(http.MethodPost)
 
 	// User routes (protected)

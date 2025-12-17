@@ -68,6 +68,7 @@ definitions:
         minLength: 8
         type: string
       role:
+        description: Optional, defaults to student
         enum:
         - student
         - instructor
@@ -78,7 +79,6 @@ definitions:
     - first_name
     - last_name
     - password
-    - role
     type: object
   dto.SuccessResponse:
     properties:
@@ -186,7 +186,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Register a new user with email, password, and role
+      description: Register a new user with email, password, and role. Only admins
+        can create admin or instructor users. Public registration defaults to student
+        role.
       parameters:
       - description: Registration details
         in: body
@@ -210,6 +212,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
@@ -218,6 +224,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Register a new user
       tags:
       - Authentication

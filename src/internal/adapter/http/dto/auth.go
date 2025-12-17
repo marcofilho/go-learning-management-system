@@ -5,7 +5,7 @@ type RegisterRequest struct {
 	Password  string `json:"password" validate:"required,min=8"`
 	FirstName string `json:"first_name" validate:"required"`
 	LastName  string `json:"last_name" validate:"required"`
-	Role      string `json:"role" validate:"required,oneof=student instructor admin"`
+	Role      string `json:"role" validate:"omitempty,oneof=student instructor admin"` // Optional, defaults to student
 }
 
 type LoginRequest struct {
