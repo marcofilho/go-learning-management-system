@@ -31,7 +31,6 @@ func (uc *CourseUseCase) CreateCourse(ctx context.Context, title, description, i
 		return nil, entity.ErrInsufficientPermissions
 	}
 
-	// Default to beginner if not provided
 	if difficultyLevel == "" {
 		difficultyLevel = entity.DifficultyLevelBeginner
 	}

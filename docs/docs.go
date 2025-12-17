@@ -764,6 +764,9 @@ const docTemplate = `{
                         "advanced"
                     ]
                 },
+                "instructor_id": {
+                    "type": "string"
+                },
                 "title": {
                     "type": "string"
                 }

@@ -46,12 +46,21 @@ func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	instructorID := userID
+	if req.InstructorID != "" {
+		if !IsAdmin(r) {
+			respondWithError(w, http.StatusForbidden, "Only admins can create courses for other instructors")
+			return
+		}
+		instructorID = req.InstructorID
+	}
+
 	difficultyLevel := entity.DifficultyLevel(req.DifficultyLevel)
 	if difficultyLevel == "" {
 		difficultyLevel = entity.DifficultyLevelBeginner
 	}
 
-	course, err := h.courseUseCase.CreateCourse(r.Context(), req.Title, req.Description, userID, difficultyLevel)
+	course, err := h.courseUseCase.CreateCourse(r.Context(), req.Title, req.Description, instructorID, difficultyLevel)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return

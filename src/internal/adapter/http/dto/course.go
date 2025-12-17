@@ -16,6 +16,7 @@ type CreateCourseRequest struct {
 	Title           string `json:"title" validate:"required"`
 	Description     string `json:"description"`
 	DifficultyLevel string `json:"difficulty_level" validate:"omitempty,oneof=beginner intermediate advanced"`
+	InstructorID    string `json:"instructor_id" validate:"omitempty,uuid"`
 }
 
 type UpdateCourseRequest struct {

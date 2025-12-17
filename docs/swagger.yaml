@@ -27,6 +27,8 @@ definitions:
         - intermediate
         - advanced
         type: string
+      instructor_id:
+        type: string
       title:
         type: string
     required:
