@@ -79,11 +79,10 @@ func (uc *CertificationWebhookUseCase) ProcessCertification(ctx context.Context,
 		payload.Score,
 	)
 
-	// Use composite key (StudentID-CourseID) as entity ID for audit log
-	entityID := fmt.Sprintf("%s-%s", payload.StudentID, payload.CourseID)
+	// Use course ID as entity ID for audit log (enrollment is tied to this course)
 	auditLog, err := entity.NewAuditLog(
 		entity.AuditActionCertificationWebhook,
-		entityID,
+		payload.CourseID,
 		"enrollment",
 		payloadBeforeJSON,
 		payloadAfterJSON,
