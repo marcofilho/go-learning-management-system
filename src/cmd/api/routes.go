@@ -20,6 +20,7 @@ func SetupRoutes(
 	enrollmentHandler *handler.EnrollmentHandler,
 	moduleHandler *handler.ModuleHandler,
 	lessonHandler *handler.LessonHandler,
+	certificationWebhookHandler *handler.CertificationWebhookHandler,
 	tokenProvider auth.TokenProvider,
 	courseRepo repository.CourseRepository,
 	enrollmentRepo repository.EnrollmentRepository,
@@ -35,6 +36,8 @@ func SetupRoutes(
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}).Methods(http.MethodGet)
+
+	api.HandleFunc("/certification-webhook", certificationWebhookHandler.ProcessCertificationWebhook).Methods(http.MethodPost)
 
 	api.Handle("/auth/register", middleware.OptionalAuthMiddleware(tokenProvider)(http.HandlerFunc(userHandler.Register))).Methods(http.MethodPost)
 	api.HandleFunc("/auth/login", userHandler.Login).Methods(http.MethodPost)

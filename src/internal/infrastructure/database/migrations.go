@@ -18,6 +18,7 @@ func RunMigrations(db *gorm.DB) error {
 		&entity.Module{},
 		&entity.LessonVersion{},
 		&entity.Enrollment{},
+		&entity.AuditLog{},
 	); err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}

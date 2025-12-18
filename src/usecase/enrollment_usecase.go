@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
@@ -12,13 +13,15 @@ type EnrollmentUseCase struct {
 	enrollmentRepo repository.EnrollmentRepository
 	courseRepo     repository.CourseRepository
 	userRepo       repository.UserRepository
+	auditLogRepo   repository.AuditLogRepository
 }
 
-func NewEnrollmentUseCase(enrollmentRepo repository.EnrollmentRepository, courseRepo repository.CourseRepository, userRepo repository.UserRepository) *EnrollmentUseCase {
+func NewEnrollmentUseCase(enrollmentRepo repository.EnrollmentRepository, courseRepo repository.CourseRepository, userRepo repository.UserRepository, auditLogRepo repository.AuditLogRepository) *EnrollmentUseCase {
 	return &EnrollmentUseCase{
 		enrollmentRepo: enrollmentRepo,
 		courseRepo:     courseRepo,
 		userRepo:       userRepo,
+		auditLogRepo:   auditLogRepo,
 	}
 }
 
@@ -55,6 +58,12 @@ func (uc *EnrollmentUseCase) EnrollStudent(ctx context.Context, studentID, cours
 		return nil, err
 	}
 
+	// Create audit log
+	resourceID := fmt.Sprintf("%s-%s", studentID, courseID)
+	payloadAfter := fmt.Sprintf(`{"student_id":"%s","course_id":"%s","status":"%s"}`, studentID, courseID, enrollment.Status)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionEnrollmentCreated, resourceID, "enrollment", "", payloadAfter, &requestorID)
+	uc.auditLogRepo.Create(ctx, auditLog)
+
 	return enrollment, nil
 }
 
@@ -81,10 +90,22 @@ func (uc *EnrollmentUseCase) UpdateEnrollmentStatus(ctx context.Context, student
 		return entity.ErrUnauthorized
 	}
 
+	oldStatus := enrollment.Status
 	enrollment.Status = status
 	enrollment.UpdatedAt = time.Now()
 
-	return uc.enrollmentRepo.Update(ctx, enrollment)
+	if err := uc.enrollmentRepo.Update(ctx, enrollment); err != nil {
+		return err
+	}
+
+	// Create audit log
+	resourceID := fmt.Sprintf("%s-%s", studentID, courseID)
+	payloadBefore := fmt.Sprintf(`{"status":"%s"}`, oldStatus)
+	payloadAfter := fmt.Sprintf(`{"status":"%s"}`, status)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionEnrollmentUpdated, resourceID, "enrollment", payloadBefore, payloadAfter, &userID)
+	uc.auditLogRepo.Create(ctx, auditLog)
+
+	return nil
 }
 
 func (uc *EnrollmentUseCase) DropEnrollment(ctx context.Context, studentID, courseID, userID string) error {

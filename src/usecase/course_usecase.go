@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
@@ -9,14 +10,16 @@ import (
 )
 
 type CourseUseCase struct {
-	courseRepo repository.CourseRepository
-	userRepo   repository.UserRepository
+	courseRepo   repository.CourseRepository
+	userRepo     repository.UserRepository
+	auditLogRepo repository.AuditLogRepository
 }
 
-func NewCourseUseCase(courseRepo repository.CourseRepository, userRepo repository.UserRepository) *CourseUseCase {
+func NewCourseUseCase(courseRepo repository.CourseRepository, userRepo repository.UserRepository, auditLogRepo repository.AuditLogRepository) *CourseUseCase {
 	return &CourseUseCase{
-		courseRepo: courseRepo,
-		userRepo:   userRepo,
+		courseRepo:   courseRepo,
+		userRepo:     userRepo,
+		auditLogRepo: auditLogRepo,
 	}
 }
 
@@ -30,6 +33,11 @@ func (uc *CourseUseCase) CreateCourse(ctx context.Context, title, description, i
 	if err := uc.courseRepo.Create(ctx, course); err != nil {
 		return nil, err
 	}
+
+	// Create audit log
+	payloadAfter := fmt.Sprintf(`{"id":"%s","title":"%s","instructor_id":"%s","difficulty_level":"%s"}`, course.ID, course.Title, course.InstructorID, course.DifficultyLevel)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionCourseCreated, course.ID, "course", "", payloadAfter, &instructorID)
+	uc.auditLogRepo.Create(ctx, auditLog)
 
 	return course, nil
 }
@@ -51,6 +59,12 @@ func (uc *CourseUseCase) UpdateCourse(ctx context.Context, course *entity.Course
 		return err
 	}
 
+	// Get existing course for audit log
+	existingCourse, err := uc.courseRepo.GetByID(ctx, course.ID)
+	if err != nil {
+		return err
+	}
+
 	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return err
@@ -61,7 +75,17 @@ func (uc *CourseUseCase) UpdateCourse(ctx context.Context, course *entity.Course
 	}
 
 	course.UpdatedAt = time.Now()
-	return uc.courseRepo.Update(ctx, course)
+	if err := uc.courseRepo.Update(ctx, course); err != nil {
+		return err
+	}
+
+	// Create audit log
+	payloadBefore := fmt.Sprintf(`{"title":"%s","description":"%s","difficulty_level":"%s"}`, existingCourse.Title, existingCourse.Description, existingCourse.DifficultyLevel)
+	payloadAfter := fmt.Sprintf(`{"title":"%s","description":"%s","difficulty_level":"%s"}`, course.Title, course.Description, course.DifficultyLevel)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionCourseUpdated, course.ID, "course", payloadBefore, payloadAfter, &userID)
+	uc.auditLogRepo.Create(ctx, auditLog)
+
+	return nil
 }
 
 func (uc *CourseUseCase) DeleteCourse(ctx context.Context, courseID, userID string) error {
@@ -79,5 +103,14 @@ func (uc *CourseUseCase) DeleteCourse(ctx context.Context, courseID, userID stri
 		return entity.ErrInsufficientPermissions
 	}
 
-	return uc.courseRepo.Delete(ctx, courseID)
+	if err := uc.courseRepo.Delete(ctx, courseID); err != nil {
+		return err
+	}
+
+	// Create audit log
+	payloadBefore := fmt.Sprintf(`{"id":"%s","title":"%s","instructor_id":"%s"}`, course.ID, course.Title, course.InstructorID)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionCourseDeleted, courseID, "course", payloadBefore, "", &userID)
+	uc.auditLogRepo.Create(ctx, auditLog)
+
+	return nil
 }

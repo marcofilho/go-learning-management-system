@@ -58,22 +58,25 @@ func main() {
 	enrollmentRepo := repository.NewPostgresEnrollmentRepository(gormDB)
 	moduleRepo := repository.NewPostgresModuleRepository(gormDB)
 	lessonRepo := repository.NewPostgresLessonRepository(gormDB)
+	auditLogRepo := repository.NewPostgresAuditLogRepository(gormDB)
 
 	tokenProvider := auth.NewJWTProvider(&cfg.JWT)
 
 	userUseCase := usecase.NewUserUseCase(userRepo, tokenProvider)
-	courseUseCase := usecase.NewCourseUseCase(courseRepo, userRepo)
-	enrollmentUseCase := usecase.NewEnrollmentUseCase(enrollmentRepo, courseRepo, userRepo)
+	courseUseCase := usecase.NewCourseUseCase(courseRepo, userRepo, auditLogRepo)
+	enrollmentUseCase := usecase.NewEnrollmentUseCase(enrollmentRepo, courseRepo, userRepo, auditLogRepo)
 	moduleUseCase := usecase.NewModuleUseCase(moduleRepo, courseRepo)
-	lessonUseCase := usecase.NewLessonUseCase(lessonRepo, moduleRepo, courseRepo)
+	lessonUseCase := usecase.NewLessonUseCase(lessonRepo, moduleRepo, courseRepo, auditLogRepo)
+	certificationWebhookUseCase := usecase.NewCertificationWebhookUseCase(userRepo, courseRepo, enrollmentRepo, auditLogRepo)
 
 	userHandler := handler.NewUserHandler(userUseCase)
 	courseHandler := handler.NewCourseHandler(courseUseCase)
 	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentUseCase)
 	moduleHandler := handler.NewModuleHandler(moduleUseCase)
 	lessonHandler := handler.NewLessonHandler(lessonUseCase)
+	certificationWebhookHandler := handler.NewCertificationWebhookHandler(certificationWebhookUseCase)
 
-	router := SetupRoutes(userHandler, courseHandler, enrollmentHandler, moduleHandler, lessonHandler, tokenProvider, courseRepo, enrollmentRepo, moduleRepo)
+	router := SetupRoutes(userHandler, courseHandler, enrollmentHandler, moduleHandler, lessonHandler, certificationWebhookHandler, tokenProvider, courseRepo, enrollmentRepo, moduleRepo)
 
 	router = middleware.LoggerMiddleware(router)
 	router = middleware.CORSMiddleware(router)

@@ -2,22 +2,25 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 )
 
 type LessonUseCase struct {
-	lessonRepo repository.LessonRepository
-	moduleRepo repository.ModuleRepository
-	courseRepo repository.CourseRepository
+	lessonRepo   repository.LessonRepository
+	moduleRepo   repository.ModuleRepository
+	courseRepo   repository.CourseRepository
+	auditLogRepo repository.AuditLogRepository
 }
 
-func NewLessonUseCase(lessonRepo repository.LessonRepository, moduleRepo repository.ModuleRepository, courseRepo repository.CourseRepository) *LessonUseCase {
+func NewLessonUseCase(lessonRepo repository.LessonRepository, moduleRepo repository.ModuleRepository, courseRepo repository.CourseRepository, auditLogRepo repository.AuditLogRepository) *LessonUseCase {
 	return &LessonUseCase{
-		lessonRepo: lessonRepo,
-		moduleRepo: moduleRepo,
-		courseRepo: courseRepo,
+		lessonRepo:   lessonRepo,
+		moduleRepo:   moduleRepo,
+		courseRepo:   courseRepo,
+		auditLogRepo: auditLogRepo,
 	}
 }
 
@@ -42,7 +45,16 @@ func (uc *LessonUseCase) CreateLesson(ctx context.Context, lesson *entity.Lesson
 		return err
 	}
 
-	return uc.lessonRepo.Create(ctx, lesson)
+	if err := uc.lessonRepo.Create(ctx, lesson); err != nil {
+		return err
+	}
+
+	// Create audit log
+	payloadAfter := fmt.Sprintf(`{"id":"%s","module_id":"%s","version":%d}`, lesson.ID, lesson.ModuleID, lesson.VersionNumber)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionLessonVersionCreated, lesson.ID, "lesson", "", payloadAfter, &instructorID)
+	uc.auditLogRepo.Create(ctx, auditLog)
+
+	return nil
 }
 
 func (uc *LessonUseCase) CreateLessonVersion(ctx context.Context, lessonID string, newVersion *entity.LessonVersion, instructorID string) error {
@@ -77,7 +89,17 @@ func (uc *LessonUseCase) CreateLessonVersion(ctx context.Context, lessonID strin
 		return err
 	}
 
-	return uc.lessonRepo.Create(ctx, newVersion)
+	if err := uc.lessonRepo.Create(ctx, newVersion); err != nil {
+		return err
+	}
+
+	// Create audit log
+	payloadBefore := fmt.Sprintf(`{"id":"%s","version":%d}`, existingLesson.ID, existingLesson.VersionNumber)
+	payloadAfter := fmt.Sprintf(`{"id":"%s","version":%d}`, newVersion.ID, newVersion.VersionNumber)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionLessonVersionCreated, newVersion.ID, "lesson", payloadBefore, payloadAfter, &instructorID)
+	uc.auditLogRepo.Create(ctx, auditLog)
+
+	return nil
 }
 
 func (uc *LessonUseCase) GetLatestLessonsByModule(ctx context.Context, moduleID string) ([]*entity.LessonVersion, error) {
@@ -116,5 +138,14 @@ func (uc *LessonUseCase) DeleteLesson(ctx context.Context, id string, instructor
 		return entity.ErrUnauthorized
 	}
 
-	return uc.lessonRepo.Delete(ctx, id)
+	if err := uc.lessonRepo.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	// Create audit log
+	payloadBefore := fmt.Sprintf(`{"id":"%s","module_id":"%s"}`, lesson.ID, lesson.ModuleID)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionLessonDeleted, id, "lesson", payloadBefore, "", &instructorID)
+	uc.auditLogRepo.Create(ctx, auditLog)
+
+	return nil
 }
