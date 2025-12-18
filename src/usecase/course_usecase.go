@@ -23,14 +23,10 @@ func NewCourseUseCase(courseRepo repository.CourseRepository, userRepo repositor
 func (uc *CourseUseCase) CreateCourse(ctx context.Context, title, description, instructorID string, difficultyLevel entity.DifficultyLevel) (*entity.Course, error) {
         instructor, err := uc.userRepo.GetByID(ctx, instructorID)
         if err != nil {
-                return nil, err
-        }
+		return nil, entity.ErrNotFound
+	}
 
-        course, err := entity.NewCourse(title, description, instructorID, difficultyLevel, instructor)
-        if err != nil {
-                return nil, err
-        }
-
+	course, err := entity.NewCourse(title, description, instructorID, difficultyLevel, instructor)
         if err := uc.courseRepo.Create(ctx, course); err != nil {
                 return nil, err
         }

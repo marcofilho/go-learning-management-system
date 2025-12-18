@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
@@ -52,6 +53,12 @@ func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusForbidden, "Only admins can create courses for other instructors")
 			return
 		}
+		
+		if _, err := uuid.Parse(req.InstructorID); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid instructor ID format")
+			return
+		}
+		
 		instructorID = req.InstructorID
 	}
 
