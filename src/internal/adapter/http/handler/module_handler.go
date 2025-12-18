@@ -109,6 +109,40 @@ func (h *ModuleHandler) GetCourseModules(w http.ResponseWriter, r *http.Request)
 	respondWithJSON(w, http.StatusOK, response)
 }
 
+func (h *ModuleHandler) GetModule(w http.ResponseWriter, r *http.Request) {
+	// GetModule godoc
+	// @Summary Get module
+	// @Description Get a module by ID
+	// @Tags Modules
+	// @Accept json
+	// @Produce json
+	// @Param id path string true "Module ID"
+	// @Success 200 {object} dto.SuccessResponse{data=dto.ModuleDTO}
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /modules/{id} [get]
+	vars := mux.Vars(r)
+	moduleID := vars["id"]
+
+	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID)
+	if err != nil {
+		handleUseCaseError(w, err)
+		return
+	}
+
+	response := dto.ModuleDTO{
+		ID:         module.ID,
+		CourseID:   module.CourseID,
+		Title:      module.Title,
+		OrderIndex: module.OrderIndex,
+		CreatedAt:  module.CreatedAt,
+		UpdatedAt:  module.UpdatedAt,
+	}
+
+	respondWithJSON(w, http.StatusOK, response)
+}
+
 func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
 	// UpdateModule godoc
 	// @Summary Update module

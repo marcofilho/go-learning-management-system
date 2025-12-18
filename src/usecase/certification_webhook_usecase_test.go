@@ -1,15 +1,15 @@
 package usecase
 
 import (
-"context"
-"testing"
-"time"
+	"context"
+	"testing"
+	"time"
 
-"github.com/google/uuid"
-"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
-"github.com/stretchr/testify/assert"
-"github.com/stretchr/testify/mock"
-"github.com/stretchr/testify/require"
+	"github.com/google/uuid"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCertificationWebhookUseCase_ProcessCertification_Passed(t *testing.T) {

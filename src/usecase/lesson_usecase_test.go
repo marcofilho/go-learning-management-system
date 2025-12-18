@@ -1,14 +1,14 @@
 package usecase
 
 import (
-"context"
-"testing"
+	"context"
+	"testing"
 
-"github.com/google/uuid"
-"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
-"github.com/stretchr/testify/assert"
-"github.com/stretchr/testify/mock"
-"github.com/stretchr/testify/require"
+	"github.com/google/uuid"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 type MockLessonRepository struct {
@@ -104,7 +104,7 @@ func TestLessonUseCase_CreateLesson(t *testing.T) {
 func TestLessonUseCase_CreateLesson_Unauthorized(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	otherInstructor, _ := entity.NewUser("other@example.com", "password123", "Jane", "Smith", entity.UserRoleInstructor)
-	
+
 	course := &entity.Course{
 		ID:           uuid.New().String(),
 		Title:        "Test Course",

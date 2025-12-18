@@ -1,0 +1,115 @@
+package handler
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/middleware"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/infrastructure/auth"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/usecase"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+func TestEnrollmentHandler_EnrollInCourse_SelfEnrollment(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	studentID := uuid.New().String()
+	courseID := uuid.New().String()
+	student, _ := entity.NewUser("student@example.com", "password123", "John", "Student", entity.UserRoleStudent)
+	student.ID = studentID
+	course := &entity.Course{ID: courseID, Title: "Test Course"}
+
+	mockUserRepo.On("GetByID", mock.Anything, studentID).Return(student, nil)
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
+	mockEnrollRepo.On("GetByStudentAndCourse", mock.Anything, studentID, courseID).Return(nil, entity.ErrNotFound)
+	mockEnrollRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.Enrollment")).Return(nil)
+	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
+
+	reqBody := dto.EnrollCourseRequest{}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID+"/enroll", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+
+	claims := &auth.Claims{
+		UserID: studentID,
+		Email:  "student@example.com",
+		Role:   entity.UserRoleStudent,
+	}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.EnrollInCourse(rr, req)
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
+	mockEnrollRepo.AssertExpectations(t)
+}
+
+func TestEnrollmentHandler_GetStudentCourses_Success(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	studentID := uuid.New().String()
+	enrollments := []*entity.Enrollment{
+		{StudentID: studentID, CourseID: uuid.New().String(), Status: entity.EnrollmentStatusActive},
+		{StudentID: studentID, CourseID: uuid.New().String(), Status: entity.EnrollmentStatusActive},
+	}
+
+	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/students/"+studentID+"/courses", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": studentID})
+	rr := httptest.NewRecorder()
+
+	handler.GetStudentCourses(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockEnrollRepo.AssertExpectations(t)
+}
+
+func TestEnrollmentHandler_GetCourseStudents_Success(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	courseID := uuid.New().String()
+	enrollments := []*entity.Enrollment{
+		{StudentID: uuid.New().String(), CourseID: courseID, Status: entity.EnrollmentStatusActive},
+		{StudentID: uuid.New().String(), CourseID: courseID, Status: entity.EnrollmentStatusActive},
+	}
+
+	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID+"/students", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	rr := httptest.NewRecorder()
+
+	handler.GetCourseStudents(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockEnrollRepo.AssertExpectations(t)
+}

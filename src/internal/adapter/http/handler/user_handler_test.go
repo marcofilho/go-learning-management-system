@@ -18,74 +18,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockUserRepository struct {
-	mock.Mock
-}
-
-func (m *MockUserRepository) Create(ctx context.Context, user *entity.User) error {
-	args := m.Called(ctx, user)
-	return args.Error(0)
-}
-
-func (m *MockUserRepository) GetByID(ctx context.Context, id string) (*entity.User, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*entity.User), args.Error(1)
-}
-
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
-	args := m.Called(ctx, email)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*entity.User), args.Error(1)
-}
-
-func (m *MockUserRepository) GetByRole(ctx context.Context, role entity.UserRole) ([]*entity.User, error) {
-	args := m.Called(ctx, role)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*entity.User), args.Error(1)
-}
-
-func (m *MockUserRepository) List(ctx context.Context, limit, offset int) ([]*entity.User, error) {
-	args := m.Called(ctx, limit, offset)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*entity.User), args.Error(1)
-}
-
-func (m *MockUserRepository) Update(ctx context.Context, user *entity.User) error {
-	args := m.Called(ctx, user)
-	return args.Error(0)
-}
-
-func (m *MockUserRepository) Delete(ctx context.Context, id string) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
-type MockTokenProvider struct {
-	mock.Mock
-}
-
-func (m *MockTokenProvider) GenerateToken(user *entity.User) (string, error) {
-	args := m.Called(user)
-	return args.String(0), args.Error(1)
-}
-
-func (m *MockTokenProvider) ValidateToken(tokenString string) (*auth.Claims, error) {
-	args := m.Called(tokenString)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*auth.Claims), args.Error(1)
-}
-
 func TestUserHandler_Register_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockToken := new(MockTokenProvider)
@@ -189,7 +121,7 @@ func TestUserHandler_ListUsers_Success(t *testing.T) {
 	user1, _ := entity.NewUser("test1@example.com", "password123", "John", "Doe", entity.UserRoleStudent)
 	user2, _ := entity.NewUser("test2@example.com", "password123", "Jane", "Smith", entity.UserRoleInstructor)
 	users := []*entity.User{user1, user2}
-	
+
 	mockRepo.On("List", mock.Anything, 10, 0).Return(users, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/users", nil)
@@ -200,7 +132,7 @@ func TestUserHandler_ListUsers_Success(t *testing.T) {
 	}
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
 	req = req.WithContext(ctx)
-	
+
 	rr := httptest.NewRecorder()
 
 	handler.ListUsers(rr, req)
