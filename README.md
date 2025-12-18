@@ -240,11 +240,28 @@ Current schema version: **1** (initial_schema)
 
 ### Running Tests
 
+Unit tests are implemented for all layers of the application.
+
 ```bash
+# Run all tests
 make test
 # or
 go test -v -cover ./...
+
+# Run entity tests only
+go test ./src/internal/domain/entity -v
+
+# Run with coverage report
+go test ./... -cover -coverprofile=coverage.out
+go tool cover -html=coverage.out
 ```
+
+**Testing Documentation**:
+- [TESTING_QUICKSTART.md](TESTING_QUICKSTART.md) - Quick start guide
+- [UNIT_TESTING_GUIDE.md](UNIT_TESTING_GUIDE.md) - Comprehensive testing guide
+- [TESTING_IMPLEMENTATION_SUMMARY.md](TESTING_IMPLEMENTATION_SUMMARY.md) - Implementation details
+
+**Current Test Status**: ✅ Foundation complete with entity tests passing
 
 ### Code Formatting
 
