@@ -3,10 +3,16 @@
 ## Project Structure
 
 ```
+migrations/                     # Database migrations (golang-migrate)
+├── 000001_initial_schema.up.sql
+└── 000001_initial_schema.down.sql
 src/
-├── cmd/api/                    # Application entry point
-│   ├── main.go                 # Main application
-│   └── routes.go               # HTTP route configuration
+├── cmd/
+│   ├── api/                    # Application entry point
+│   │   ├── main.go             # Main application
+│   │   └── routes.go           # HTTP route configuration
+│   └── migrate/                # Migration CLI tool
+│       └── main.go             # Migration commands
 ├── internal/
 │   ├── domain/                 # Domain layer (entities & interfaces)
 │   │   ├── entity/             # Domain entities

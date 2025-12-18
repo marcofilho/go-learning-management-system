@@ -29,9 +29,12 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-default-webhook-secret}
     ports:
       - "${SERVER_PORT}:8080"
     depends_on:

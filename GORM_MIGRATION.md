@@ -1,7 +1,12 @@
-# GORM Migration Complete ✅
+# Database Migration System ✅
 
-## Summary
-Successfully migrated the Learning Management System from raw SQL queries (pgx) to GORM ORM.
+## Current System: golang-migrate
+
+The project now uses **golang-migrate** for versioned database migrations instead of GORM's AutoMigrate. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for complete documentation.
+
+## Previous: GORM Migration
+
+This document describes the historical migration from raw SQL queries (pgx) to GORM ORM.
 
 ## Changes Made
 

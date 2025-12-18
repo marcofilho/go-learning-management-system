@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto" // Required for Swagger docs
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/usecase"
 )
 
@@ -37,11 +38,11 @@ func NewCertificationWebhookHandler(webhookUseCase *usecase.CertificationWebhook
 // @Produce json
 // @Param X-Webhook-Signature header string true "HMAC signature"
 // @Param payload body usecase.CertificationWebhookPayload true "Certification data"
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /api/certification-webhook [post]
 func (h *CertificationWebhookHandler) ProcessCertificationWebhook(w http.ResponseWriter, r *http.Request) {
 	// Read the body

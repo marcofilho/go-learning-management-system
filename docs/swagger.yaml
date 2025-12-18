@@ -1,6 +1,6 @@
 basePath: /api
 definitions:
-  dto.CourseDTO:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO:
     properties:
       created_at:
         type: string
@@ -17,7 +17,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.CreateCourseRequest:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CreateCourseRequest:
     properties:
       description:
         type: string
@@ -34,14 +34,14 @@ definitions:
     required:
     - title
     type: object
-  dto.ErrorResponse:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse:
     properties:
       error:
         type: string
       message:
         type: string
     type: object
-  dto.LoginRequest:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginRequest:
     properties:
       email:
         type: string
@@ -51,14 +51,19 @@ definitions:
     - email
     - password
     type: object
-  dto.LoginResponse:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginResponse:
     properties:
       token:
         type: string
       user:
-        $ref: '#/definitions/dto.UserDTO'
+        $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
     type: object
-  dto.RegisterRequest:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.RegisterRequest:
     properties:
       email:
         type: string
@@ -82,13 +87,13 @@ definitions:
     - last_name
     - password
     type: object
-  dto.SuccessResponse:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse:
     properties:
       data: {}
       message:
         type: string
     type: object
-  dto.UpdateCourseRequest:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateCourseRequest:
     properties:
       description:
         type: string
@@ -101,7 +106,7 @@ definitions:
       title:
         type: string
     type: object
-  dto.UpdateUserRequest:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateUserRequest:
     properties:
       email:
         type: string
@@ -112,7 +117,7 @@ definitions:
       last_name:
         type: string
     type: object
-  dto.UserDTO:
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO:
     properties:
       created_at:
         type: string
@@ -131,6 +136,19 @@ definitions:
       updated_at:
         type: string
     type: object
+  github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_usecase.CertificationWebhookPayload:
+    properties:
+      certification_status:
+        type: string
+      course_id:
+        type: string
+      score:
+        type: integer
+      student_id:
+        type: string
+      timestamp:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -145,6 +163,49 @@ info:
   title: Learning Management System API
   version: "1.0"
 paths:
+  /api/certification-webhook:
+    post:
+      consumes:
+      - application/json
+      description: Receives certification results from external provider
+      parameters:
+      - description: HMAC signature
+        in: header
+        name: X-Webhook-Signature
+        required: true
+        type: string
+      - description: Certification data
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_usecase.CertificationWebhookPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
+      summary: Process certification webhook
+      tags:
+      - webhooks
   /auth/login:
     post:
       consumes:
@@ -156,7 +217,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginRequest'
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginRequest'
       produces:
       - application/json
       responses:
@@ -164,23 +225,23 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.LoginResponse'
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.LoginResponse'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       summary: User login
       tags:
       - Authentication
@@ -197,7 +258,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -205,27 +266,27 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.UserDTO'
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Register a new user
@@ -266,17 +327,17 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/dto.CourseDTO'
+                    $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO'
                   type: array
               type: object
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List courses
@@ -292,7 +353,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateCourseRequest'
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CreateCourseRequest'
       produces:
       - application/json
       responses:
@@ -300,23 +361,23 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.CourseDTO'
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a new course
@@ -340,15 +401,15 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.CourseDTO'
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO'
               type: object
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get course by ID
@@ -369,7 +430,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateCourseRequest'
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateCourseRequest'
       produces:
       - application/json
       responses:
@@ -377,31 +438,31 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.CourseDTO'
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.CourseDTO'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update course
@@ -430,17 +491,17 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/dto.UserDTO'
+                    $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
                   type: array
               type: object
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List all users
@@ -463,19 +524,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.SuccessResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete user
@@ -507,15 +568,15 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.UserDTO'
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
               type: object
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       - BearerAuth: []
@@ -538,7 +599,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateUserRequest'
+          $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UpdateUserRequest'
       produces:
       - application/json
       responses:
@@ -546,27 +607,27 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.SuccessResponse'
+            - $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.UserDTO'
+                  $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.UserDTO'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/github_com_marcoantoniobarcelloslimafilho_go-learning-management-system_src_internal_adapter_http_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update user

@@ -10,6 +10,11 @@ type SuccessResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+// MessageResponse represents a simple message response
+type MessageResponse struct {
+	Message string `json:"message"`
+}
+
 type PaginationRequest struct {
 	Limit  int `json:"limit" form:"limit" validate:"omitempty,gte=1,lte=100"`
 	Offset int `json:"offset" form:"offset" validate:"omitempty,gte=0"`
