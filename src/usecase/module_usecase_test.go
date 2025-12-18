@@ -1,14 +1,14 @@
 package usecase
 
 import (
-"context"
-"testing"
+	"context"
+	"testing"
 
-"github.com/google/uuid"
-"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
-"github.com/stretchr/testify/assert"
-"github.com/stretchr/testify/mock"
-"github.com/stretchr/testify/require"
+	"github.com/google/uuid"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 type MockModuleRepository struct {
@@ -92,4 +92,81 @@ func TestModuleUseCase_GetModulesByCourse(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
 	mockModuleRepo.AssertExpectations(t)
+}
+
+func TestModuleUseCase_GetModule(t *testing.T) {
+	moduleID := uuid.New().String()
+	module := &entity.Module{ID: moduleID, Title: "Module 1"}
+
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil)
+
+	uc := NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	result, err := uc.GetModule(context.Background(), moduleID)
+
+	require.NoError(t, err)
+	assert.Equal(t, module, result)
+	mockModuleRepo.AssertExpectations(t)
+}
+
+func TestModuleUseCase_UpdateModule(t *testing.T) {
+	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
+	course := &entity.Course{
+		ID:           uuid.New().String(),
+		Title:        "Test Course",
+		InstructorID: instructor.ID,
+	}
+	module := &entity.Module{
+		ID:       uuid.New().String(),
+		CourseID: course.ID,
+		Title:    "Old Title",
+	}
+
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	mockModuleRepo.On("GetByID", mock.Anything, module.ID).Return(module, nil)
+	mockCourseRepo.On("GetByID", mock.Anything, course.ID).Return(course, nil)
+	mockModuleRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Module")).Return(nil)
+
+	uc := NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	updatedModule := &entity.Module{
+		ID:       module.ID,
+		CourseID: course.ID,
+		Title:    "New Title",
+	}
+	err := uc.UpdateModule(context.Background(), updatedModule, instructor.ID)
+
+	require.NoError(t, err)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+}
+
+func TestModuleUseCase_DeleteModule(t *testing.T) {
+	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
+	course := &entity.Course{
+		ID:           uuid.New().String(),
+		Title:        "Test Course",
+		InstructorID: instructor.ID,
+	}
+	module := &entity.Module{
+		ID:       uuid.New().String(),
+		CourseID: course.ID,
+	}
+
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	mockModuleRepo.On("GetByID", mock.Anything, module.ID).Return(module, nil)
+	mockCourseRepo.On("GetByID", mock.Anything, course.ID).Return(course, nil)
+	mockModuleRepo.On("Delete", mock.Anything, module.ID).Return(nil)
+
+	uc := NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	err := uc.DeleteModule(context.Background(), module.ID, instructor.ID)
+
+	require.NoError(t, err)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
 }

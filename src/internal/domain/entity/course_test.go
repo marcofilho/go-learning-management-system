@@ -24,3 +24,76 @@ func TestCourse_CanBeModifiedBy(t *testing.T) {
 	assert.True(t, course.CanBeModifiedBy(instructor))
 	assert.True(t, course.CanBeModifiedBy(admin))
 }
+
+func TestNewCourse_Validation(t *testing.T) {
+	instructor, _ := NewUser("instructor@example.com", "password123", "I", "T", UserRoleInstructor)
+	student, _ := NewUser("student@example.com", "password123", "S", "T", UserRoleStudent)
+
+	_, err := NewCourse("", "Description", instructor.ID, DifficultyLevelBeginner, instructor)
+	assert.Error(t, err, "should fail with empty title")
+
+	_, err = NewCourse("Title", "Description", instructor.ID, DifficultyLevelBeginner, student)
+	assert.Error(t, err, "should fail if creator is not an instructor or admin")
+}
+
+func TestCourse_TableName(t *testing.T) {
+	var course Course
+	assert.Equal(t, "courses", course.TableName())
+}
+
+func TestCourse_Validate(t *testing.T) {
+	instructor, _ := NewUser("instructor@example.com", "password123", "I", "T", UserRoleInstructor)
+	tests := []struct {
+		name    string
+		course  *Course
+		wantErr bool
+	}{
+		{
+			name: "EmptyTitle",
+			course: &Course{
+				Title:        "",
+				Description:  "Description",
+				InstructorID: instructor.ID,
+			},
+			wantErr: true,
+		},
+		{
+			name: "EmptyDescription",
+			course: &Course{
+				Title:        "Title",
+				Description:  "",
+				InstructorID: instructor.ID,
+			},
+			wantErr: true,
+		},
+		{
+			name: "EmptyInstructorID",
+			course: &Course{
+				Title:        "Title",
+				Description:  "Description",
+				InstructorID: "",
+			},
+			wantErr: true,
+		},
+		{
+			name: "InvalidInstructorID",
+			course: &Course{
+				Title:        "Title",
+				Description:  "Description",
+				InstructorID: "invalid-uuid",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.course.Validate()
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

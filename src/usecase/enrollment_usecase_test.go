@@ -141,3 +141,90 @@ func TestEnrollmentUseCase_GetCourseStudents(t *testing.T) {
 	assert.Len(t, result, 2)
 	mockEnrollRepo.AssertExpectations(t)
 }
+
+func TestEnrollmentUseCase_UpdateEnrollmentStatus(t *testing.T) {
+	admin, _ := entity.NewUser("admin@example.com", "password123", "Admin", "User", entity.UserRoleAdmin)
+	student, _ := entity.NewUser("student@example.com", "password123", "Student", "User", entity.UserRoleStudent)
+	enrollment := &entity.Enrollment{
+		StudentID: student.ID,
+		CourseID:  uuid.New().String(),
+		Status:    entity.EnrollmentStatusActive,
+	}
+
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	uc := NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+
+	mockUserRepo.On("GetByID", mock.Anything, admin.ID).Return(admin, nil)
+	mockEnrollRepo.On("GetByStudentAndCourse", mock.Anything, enrollment.StudentID, enrollment.CourseID).Return(enrollment, nil)
+	mockEnrollRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Enrollment")).Return(nil)
+	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
+
+	err := uc.UpdateEnrollmentStatus(context.Background(), enrollment.StudentID, enrollment.CourseID, entity.EnrollmentStatusCompleted, admin.ID)
+	require.NoError(t, err)
+
+	mockEnrollRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+	mockAuditRepo.AssertExpectations(t)
+}
+
+func TestEnrollmentUseCase_DropEnrollment(t *testing.T) {
+	admin, _ := entity.NewUser("admin@example.com", "password123", "Admin", "User", entity.UserRoleAdmin)
+	student, _ := entity.NewUser("student@example.com", "password123", "Student", "User", entity.UserRoleStudent)
+	enrollment := &entity.Enrollment{
+		StudentID: student.ID,
+		CourseID:  uuid.New().String(),
+		Status:    entity.EnrollmentStatusActive,
+	}
+
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	uc := NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+
+	mockUserRepo.On("GetByID", mock.Anything, admin.ID).Return(admin, nil)
+	mockEnrollRepo.On("GetByStudentAndCourse", mock.Anything, enrollment.StudentID, enrollment.CourseID).Return(enrollment, nil)
+	mockEnrollRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Enrollment")).Return(nil)
+	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
+
+	err := uc.DropEnrollment(context.Background(), enrollment.StudentID, enrollment.CourseID, admin.ID)
+	require.NoError(t, err)
+
+	mockEnrollRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+	mockAuditRepo.AssertExpectations(t)
+}
+
+func TestEnrollmentUseCase_CompleteEnrollment(t *testing.T) {
+	admin, _ := entity.NewUser("admin@example.com", "password123", "Admin", "User", entity.UserRoleAdmin)
+	student, _ := entity.NewUser("student@example.com", "password123", "Student", "User", entity.UserRoleStudent)
+	enrollment := &entity.Enrollment{
+		StudentID: student.ID,
+		CourseID:  uuid.New().String(),
+		Status:    entity.EnrollmentStatusActive,
+	}
+
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	uc := NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+
+	mockUserRepo.On("GetByID", mock.Anything, admin.ID).Return(admin, nil)
+	mockEnrollRepo.On("GetByStudentAndCourse", mock.Anything, enrollment.StudentID, enrollment.CourseID).Return(enrollment, nil)
+	mockEnrollRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Enrollment")).Return(nil)
+	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
+
+	err := uc.CompleteEnrollment(context.Background(), enrollment.StudentID, enrollment.CourseID, admin.ID)
+	require.NoError(t, err)
+
+	mockEnrollRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+	mockAuditRepo.AssertExpectations(t)
+}

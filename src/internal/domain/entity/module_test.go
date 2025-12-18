@@ -120,3 +120,8 @@ func TestModule_CanBeModifiedBy(t *testing.T) {
 	assert.True(t, module.CanBeModifiedBy(course, instructor.ID))
 	assert.False(t, module.CanBeModifiedBy(course, otherInstructor.ID))
 }
+
+func TestModule_TableName(t *testing.T) {
+	var module Module
+	assert.Equal(t, "modules", module.TableName())
+}

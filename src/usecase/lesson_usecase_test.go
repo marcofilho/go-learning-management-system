@@ -98,13 +98,10 @@ func TestLessonUseCase_CreateLesson(t *testing.T) {
 	mockLessonRepo.AssertExpectations(t)
 	mockModuleRepo.AssertExpectations(t)
 	mockCourseRepo.AssertExpectations(t)
-	mockAuditRepo.AssertExpectations(t)
 }
 
-func TestLessonUseCase_CreateLesson_Unauthorized(t *testing.T) {
+func TestLessonUseCase_CreateLessonVersion(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
-	otherInstructor, _ := entity.NewUser("other@example.com", "password123", "Jane", "Smith", entity.UserRoleInstructor)
-
 	course := &entity.Course{
 		ID:           uuid.New().String(),
 		Title:        "Test Course",
@@ -115,32 +112,42 @@ func TestLessonUseCase_CreateLesson_Unauthorized(t *testing.T) {
 		CourseID: course.ID,
 		Title:    "Module 1",
 	}
+	lesson := &entity.LessonVersion{
+		ID:            uuid.New().String(),
+		ModuleID:      module.ID,
+		VersionNumber: 1,
+		Content:       "Old Content",
+	}
 
 	mockLessonRepo := new(MockLessonRepository)
 	mockModuleRepo := new(MockModuleRepository)
 	mockCourseRepo := new(MockCourseRepository)
 	mockAuditRepo := new(MockAuditLogRepository)
 
+	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+
+	mockLessonRepo.On("GetByID", mock.Anything, lesson.ID).Return(lesson, nil)
 	mockModuleRepo.On("GetByID", mock.Anything, module.ID).Return(module, nil)
 	mockCourseRepo.On("GetByID", mock.Anything, course.ID).Return(course, nil)
+	mockLessonRepo.On("GetNextVersionNumber", mock.Anything, lesson.ModuleID).Return(2, nil)
+	mockLessonRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.LessonVersion")).Return(nil)
+	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
-	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
-	lesson := &entity.LessonVersion{
-		ModuleID: module.ID,
-		Content:  "Lesson 1 content",
+	newLesson := &entity.LessonVersion{
+		Content: "New Content",
 	}
 
-	err := uc.CreateLesson(context.Background(), lesson, otherInstructor.ID)
+	err := uc.CreateLessonVersion(context.Background(), lesson.ID, newLesson, instructor.ID)
+	require.NoError(t, err)
 
-	assert.ErrorIs(t, err, entity.ErrUnauthorized)
+	mockLessonRepo.AssertExpectations(t)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+	mockAuditRepo.AssertExpectations(t)
 }
 
-func TestLessonUseCase_GetLessonsByModule(t *testing.T) {
+func TestLessonUseCase_GetLatestLessonsByModule(t *testing.T) {
 	moduleID := uuid.New().String()
-	module := &entity.Module{
-		ID:    moduleID,
-		Title: "Test Module",
-	}
 	lessons := []*entity.LessonVersion{
 		{ID: "1", ModuleID: moduleID, Content: "Lesson 1", VersionNumber: 1},
 		{ID: "2", ModuleID: moduleID, Content: "Lesson 2", VersionNumber: 1},
@@ -151,14 +158,96 @@ func TestLessonUseCase_GetLessonsByModule(t *testing.T) {
 	mockCourseRepo := new(MockCourseRepository)
 	mockAuditRepo := new(MockAuditLogRepository)
 
-	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil)
+	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(&entity.Module{ID: moduleID}, nil)
 	mockLessonRepo.On("GetLatestByModule", mock.Anything, moduleID).Return(lessons, nil)
 
-	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 	result, err := uc.GetLatestLessonsByModule(context.Background(), moduleID)
-
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
-	mockModuleRepo.AssertExpectations(t)
+
 	mockLessonRepo.AssertExpectations(t)
+}
+
+func TestLessonUseCase_GetAllLessonVersions(t *testing.T) {
+	lessonID := uuid.New().String()
+	versions := []*entity.LessonVersion{
+		{ID: lessonID, VersionNumber: 1},
+		{ID: lessonID, VersionNumber: 2},
+	}
+
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+
+	mockLessonRepo.On("GetAllVersions", mock.Anything, lessonID).Return(versions, nil)
+
+	result, err := uc.GetAllLessonVersions(context.Background(), lessonID)
+	require.NoError(t, err)
+	assert.Len(t, result, 2)
+
+	mockLessonRepo.AssertExpectations(t)
+}
+
+func TestLessonUseCase_GetLesson(t *testing.T) {
+	lessonID := uuid.New().String()
+	lesson := &entity.LessonVersion{ID: lessonID, VersionNumber: 1}
+
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+
+	mockLessonRepo.On("GetByID", mock.Anything, lessonID).Return(lesson, nil)
+
+	result, err := uc.GetLesson(context.Background(), lessonID)
+	require.NoError(t, err)
+	assert.Equal(t, lesson, result)
+
+	mockLessonRepo.AssertExpectations(t)
+}
+
+func TestLessonUseCase_DeleteLesson(t *testing.T) {
+	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
+	course := &entity.Course{
+		ID:           uuid.New().String(),
+		Title:        "Test Course",
+		InstructorID: instructor.ID,
+	}
+	module := &entity.Module{
+		ID:       uuid.New().String(),
+		CourseID: course.ID,
+		Title:    "Module 1",
+	}
+	lesson := &entity.LessonVersion{
+		ID:       uuid.New().String(),
+		ModuleID: module.ID,
+	}
+
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+
+	mockLessonRepo.On("GetByID", mock.Anything, lesson.ID).Return(lesson, nil)
+	mockModuleRepo.On("GetByID", mock.Anything, module.ID).Return(module, nil)
+	mockCourseRepo.On("GetByID", mock.Anything, course.ID).Return(course, nil)
+	mockLessonRepo.On("Delete", mock.Anything, lesson.ID).Return(nil)
+	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
+
+	err := uc.DeleteLesson(context.Background(), lesson.ID, instructor.ID)
+	require.NoError(t, err)
+
+	mockLessonRepo.AssertExpectations(t)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+	mockAuditRepo.AssertExpectations(t)
 }

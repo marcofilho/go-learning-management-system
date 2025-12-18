@@ -132,3 +132,8 @@ func TestLessonVersion_CanBeModifiedBy(t *testing.T) {
 	assert.True(t, lesson.CanBeModifiedBy(course, instructor.ID))
 	assert.False(t, lesson.CanBeModifiedBy(course, otherInstructor.ID))
 }
+
+func TestLessonVersion_TableName(t *testing.T) {
+	var lessonVersion LessonVersion
+	assert.Equal(t, "lesson_versions", lessonVersion.TableName())
+}

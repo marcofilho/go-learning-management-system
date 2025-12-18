@@ -173,3 +173,50 @@ func TestCourseHandler_DeleteCourse_Success(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, rr.Code)
 	mockCourseRepo.AssertExpectations(t)
 }
+
+func TestCourseHandler_UpdateCourse_Success(t *testing.T) {
+	mockCourseRepo := new(MockCourseRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewCourseHandler(courseUC)
+
+	courseID := uuid.New().String()
+	instructorID := uuid.New().String()
+	instructor, _ := entity.NewUser("inst@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
+	instructor.ID = instructorID
+	course := &entity.Course{
+		ID:           courseID,
+		Title:        "Old Title",
+		InstructorID: instructorID,
+	}
+
+	mockUserRepo.On("GetByID", mock.Anything, instructorID).Return(instructor, nil)
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
+	mockCourseRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Course")).Return(nil)
+	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
+
+	reqBody := dto.UpdateCourseRequest{
+		Title:           "New Title",
+		Description:     "New Description",
+		DifficultyLevel: string(entity.DifficultyLevelIntermediate),
+	}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPut, "/courses/"+courseID, bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+
+	claims := &auth.Claims{
+		UserID: instructorID,
+		Email:  "inst@example.com",
+		Role:   entity.UserRoleInstructor,
+	}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.UpdateCourse(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockCourseRepo.AssertExpectations(t)
+}
