@@ -5,6 +5,7 @@ import "errors"
 var (
 	ErrNotFound                = errors.New("resource not found")
 	ErrUnauthorized            = errors.New("unauthorized")
+	ErrFieldRequired           = errors.New("this field is required")
 	ErrInvalidInput            = errors.New("invalid input")
 	ErrDuplicateEntry          = errors.New("duplicate entry")
 	ErrInvalidCredentials      = errors.New("invalid credentials")

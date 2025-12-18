@@ -38,6 +38,10 @@ func (uc *LessonUseCase) CreateLesson(ctx context.Context, lesson *entity.Lesson
 
         lesson.VersionNumber = 1
 
+        if err := lesson.Validate(); err != nil {
+                return err
+        }
+
         return uc.lessonRepo.Create(ctx, lesson)
 }
 
@@ -68,6 +72,10 @@ func (uc *LessonUseCase) CreateLessonVersion(ctx context.Context, lessonID strin
 
         newVersion.ModuleID = existingLesson.ModuleID
         newVersion.VersionNumber = nextVersion
+
+        if err := newVersion.Validate(); err != nil {
+                return err
+        }
 
         return uc.lessonRepo.Create(ctx, newVersion)
 }

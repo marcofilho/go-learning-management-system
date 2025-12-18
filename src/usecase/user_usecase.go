@@ -69,6 +69,10 @@ func (uc *UserUseCase) ListUsers(ctx context.Context, limit, offset int) ([]*ent
 }
 
 func (uc *UserUseCase) UpdateUser(ctx context.Context, user *entity.User) error {
+        if err := user.Validate(); err != nil {
+                return err
+        }
+
         user.UpdatedAt = time.Now()
         return uc.userRepo.Update(ctx, user)
 }

@@ -2,6 +2,7 @@ package entity
 
 import (
         "github.com/google/uuid"
+        "strings"
         "time"
 
         "gorm.io/gorm"
@@ -33,12 +34,38 @@ func (Course) TableName() string {
         return "courses"
 }
 
+func (c *Course) Validate() error {
+        if strings.TrimSpace(c.Title) == "" {
+                return ErrFieldRequired
+        }
+
+        if len(c.Title) > 255 {
+                return ErrInvalidInput
+        }
+
+        if strings.TrimSpace(c.Description) == "" {
+                return ErrFieldRequired
+        }
+
+        if strings.TrimSpace(c.InstructorID) == "" {
+                return ErrFieldRequired
+        }
+
+        if _, err := uuid.Parse(c.InstructorID); err != nil {
+                return ErrInvalidInput
+        }
+
+        if c.DifficultyLevel != DifficultyLevelBeginner &&
+                c.DifficultyLevel != DifficultyLevelIntermediate &&
+                c.DifficultyLevel != DifficultyLevelAdvanced {
+                return ErrInvalidInput
+        }
+
+        return nil
+}
+
 func NewCourse(title, description, instructorID string, difficultyLevel DifficultyLevel, instructor *User) (*Course, error) {
-    if title == "" {
-		return nil, ErrInvalidInput
-	}
-	
-	if !instructor.IsInstructor() {
+        if !instructor.IsInstructor() {
                 return nil, ErrInsufficientPermissions
         }
 
@@ -46,7 +73,7 @@ func NewCourse(title, description, instructorID string, difficultyLevel Difficul
                 difficultyLevel = DifficultyLevelBeginner
         }
 
-        return &Course{
+        course := &Course{
                 ID:              uuid.New().String(),
                 Title:           title,
                 Description:     description,
@@ -54,7 +81,13 @@ func NewCourse(title, description, instructorID string, difficultyLevel Difficul
                 DifficultyLevel: difficultyLevel,
                 CreatedAt:       time.Now(),
                 UpdatedAt:       time.Now(),
-        }, nil
+        }
+
+        if err := course.Validate(); err != nil {
+                return nil, err
+        }
+
+        return course, nil
 }
 
 func (c *Course) CanBeModifiedBy(user *User) bool {

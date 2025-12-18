@@ -1,6 +1,8 @@
 package entity
 
 import (
+        "github.com/google/uuid"
+        "strings"
         "time"
 
         "gorm.io/gorm"
@@ -21,6 +23,30 @@ type Module struct {
 
 func (Module) TableName() string {
         return "modules"
+}
+
+func (m *Module) Validate() error {
+        if strings.TrimSpace(m.Title) == "" {
+                return ErrFieldRequired
+        }
+
+        if len(m.Title) > 255 {
+                return ErrInvalidInput
+        }
+
+        if strings.TrimSpace(m.CourseID) == "" {
+                return ErrFieldRequired
+        }
+
+        if _, err := uuid.Parse(m.CourseID); err != nil {
+                return ErrInvalidInput
+        }
+
+        if m.OrderIndex < 0 {
+                return ErrInvalidInput
+        }
+
+        return nil
 }
 
 func (m *Module) BelongsToCourse(courseID string) bool {

@@ -1,6 +1,8 @@
 package entity
 
 import (
+        "github.com/google/uuid"
+        "strings"
         "time"
 
         "gorm.io/gorm"
@@ -21,6 +23,26 @@ type LessonVersion struct {
 
 func (LessonVersion) TableName() string {
         return "lesson_versions"
+}
+
+func (l *LessonVersion) Validate() error {
+        if strings.TrimSpace(l.ModuleID) == "" {
+                return ErrFieldRequired
+        }
+
+        if _, err := uuid.Parse(l.ModuleID); err != nil {
+                return ErrInvalidInput
+        }
+
+        if l.VersionNumber < 1 {
+                return ErrInvalidInput
+        }
+
+        if strings.TrimSpace(l.Content) == "" && strings.TrimSpace(l.VideoURL) == "" {
+                return ErrInvalidInput
+        }
+
+        return nil
 }
 
 func (l *LessonVersion) BelongsToModule(moduleID string) bool {

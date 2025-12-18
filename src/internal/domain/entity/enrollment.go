@@ -1,6 +1,8 @@
 package entity
 
 import (
+        "github.com/google/uuid"
+        "strings"
         "time"
 
         "gorm.io/gorm"
@@ -31,19 +33,51 @@ func (Enrollment) TableName() string {
         return "course_enrollments"
 }
 
+func (e *Enrollment) Validate() error {
+        if strings.TrimSpace(e.StudentID) == "" {
+                return ErrFieldRequired
+        }
+
+        if _, err := uuid.Parse(e.StudentID); err != nil {
+                return ErrInvalidInput
+        }
+
+        if strings.TrimSpace(e.CourseID) == "" {
+                return ErrFieldRequired
+        }
+
+        if _, err := uuid.Parse(e.CourseID); err != nil {
+                return ErrInvalidInput
+        }
+
+        if e.Status != EnrollmentStatusActive &&
+                e.Status != EnrollmentStatusDropped &&
+                e.Status != EnrollmentStatusCompleted {
+                return ErrInvalidInput
+        }
+
+        return nil
+}
+
 func NewEnrollment(student *User, courseID string) (*Enrollment, error) {
         if !student.CanEnrollInCourses() {
                 return nil, ErrInvalidInput
         }
 
-        return &Enrollment{
+        enrollment := &Enrollment{
                 StudentID:      student.ID,
                 CourseID:       courseID,
                 EnrollmentDate: time.Now(),
                 Status:         EnrollmentStatusActive,
                 CreatedAt:      time.Now(),
                 UpdatedAt:      time.Now(),
-        }, nil
+        }
+
+        if err := enrollment.Validate(); err != nil {
+                return nil, err
+        }
+
+        return enrollment, nil
 }
 
 func (e *Enrollment) CanBeModifiedBy(user *User) bool {

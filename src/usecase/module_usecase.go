@@ -20,6 +20,10 @@ func NewModuleUseCase(moduleRepo repository.ModuleRepository, courseRepo reposit
 }
 
 func (uc *ModuleUseCase) CreateModule(ctx context.Context, module *entity.Module, instructorID string) error {
+        if err := module.Validate(); err != nil {
+                return err
+        }
+
         course, err := uc.courseRepo.GetByID(ctx, module.CourseID)
         if err != nil {
                 return err
@@ -45,6 +49,10 @@ func (uc *ModuleUseCase) GetModule(ctx context.Context, id string) (*entity.Modu
 }
 
 func (uc *ModuleUseCase) UpdateModule(ctx context.Context, module *entity.Module, instructorID string) error {
+        if err := module.Validate(); err != nil {
+                return err
+        }
+
         existingModule, err := uc.moduleRepo.GetByID(ctx, module.ID)
         if err != nil {
                 return err

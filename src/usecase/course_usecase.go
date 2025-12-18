@@ -51,6 +51,10 @@ func (uc *CourseUseCase) GetCoursesByInstructor(ctx context.Context, instructorI
 }
 
 func (uc *CourseUseCase) UpdateCourse(ctx context.Context, course *entity.Course, userID string) error {
+        if err := course.Validate(); err != nil {
+                return err
+        }
+
         user, err := uc.userRepo.GetByID(ctx, userID)
         if err != nil {
                 return err

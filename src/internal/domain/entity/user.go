@@ -4,6 +4,8 @@ import (
         "github.com/google/uuid"
         "golang.org/x/crypto/bcrypt"
         "gorm.io/gorm"
+        "regexp"
+        "strings"
         "time"
 )
 
@@ -14,6 +16,8 @@ const (
         UserRoleInstructor UserRole = "instructor"
         UserRoleAdmin      UserRole = "admin"
 )
+
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type User struct {
         ID           string         `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
@@ -32,13 +36,45 @@ func (User) TableName() string {
         return "users"
 }
 
+func (u *User) Validate() error {
+        if strings.TrimSpace(u.Email) == "" {
+                return ErrFieldRequired
+        }
+
+        if !emailRegex.MatchString(u.Email) {
+                return ErrInvalidInput
+        }
+
+        if strings.TrimSpace(u.FirstName) == "" {
+                return ErrFieldRequired
+        }
+
+        if strings.TrimSpace(u.LastName) == "" {
+                return ErrFieldRequired
+        }
+
+        if u.Role != UserRoleStudent && u.Role != UserRoleInstructor && u.Role != UserRoleAdmin {
+                return ErrInvalidInput
+        }
+
+        return nil
+}
+
 func NewUser(email, password, firstName, lastName string, role UserRole) (*User, error) {
+        if strings.TrimSpace(password) == "" {
+                return nil, ErrFieldRequired
+        }
+
+        if len(password) < 6 {
+                return nil, ErrInvalidInput
+        }
+
         hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
         if err != nil {
                 return nil, err
         }
 
-        return &User{
+        user := &User{
                 ID:           uuid.New().String(),
                 Email:        email,
                 PasswordHash: string(hashedPassword),
@@ -48,7 +84,13 @@ func NewUser(email, password, firstName, lastName string, role UserRole) (*User,
                 IsActive:     true,
                 CreatedAt:    time.Now(),
                 UpdatedAt:    time.Now(),
-        }, nil
+        }
+
+        if err := user.Validate(); err != nil {
+                return nil, err
+        }
+
+        return user, nil
 }
 
 func (u *User) ValidatePassword(password string) error {
