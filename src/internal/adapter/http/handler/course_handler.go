@@ -53,12 +53,12 @@ func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusForbidden, "Only admins can create courses for other instructors")
 			return
 		}
-		
+
 		if _, err := uuid.Parse(req.InstructorID); err != nil {
 			respondWithError(w, http.StatusBadRequest, "Invalid instructor ID format")
 			return
 		}
-		
+
 		instructorID = req.InstructorID
 	}
 

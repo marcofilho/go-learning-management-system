@@ -2,11 +2,12 @@ package database
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"time"
 )
 
 type Database interface {
