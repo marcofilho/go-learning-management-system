@@ -39,6 +39,11 @@ func (d *DatabaseConfig) DSN() string {
 	)
 }
 
+// GetDatabaseURL returns the database connection URL (same as DSN)
+func (d *DatabaseConfig) GetDatabaseURL() string {
+	return d.DSN()
+}
+
 func LoadConfig() (*Config, error) {
 	expHours, err := strconv.Atoi(getEnv("JWT_EXPIRATION_HOURS", "24"))
 	if err != nil {

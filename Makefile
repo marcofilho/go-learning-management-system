@@ -1,20 +1,27 @@
-.PHONY: help start build run test clean docker-build docker-up docker-down migrate fmt lint swagger
+.PHONY: help start build run test clean docker-build docker-up docker-down migrate migrate-up migrate-down migrate-status migrate-version migrate-force migrate-create fmt lint swagger
 
 # Default target
 help:
 	@echo "Available targets:"
-	@echo "  make start        - 🚀 Start the entire project (Docker + open Swagger)"
-	@echo "  make build        - Build the application binary"
-	@echo "  make run          - Run the application locally"
-	@echo "  make test         - Run tests"
-	@echo "  make clean        - Remove build artifacts"
-	@echo "  make swagger      - Generate Swagger documentation"
-	@echo "  make docker-build - Build Docker image"
-	@echo "  make docker-up    - Start services with docker-compose"
-	@echo "  make docker-down  - Stop services with docker-compose"
-	@echo "  make fmt          - Format Go code"
-	@echo "  make lint         - Run linter"
-	@echo "  make migrate      - Run database migrations"
+	@echo "  make start         - 🚀 Start the entire project (Docker + open Swagger)"
+	@echo "  make build         - Build the application binary"
+	@echo "  make run           - Run the application locally"
+	@echo "  make test          - Run tests"
+	@echo "  make clean         - Remove build artifacts"
+	@echo "  make swagger       - Generate Swagger documentation"
+	@echo "  make docker-build  - Build Docker image"
+	@echo "  make docker-up     - Start services with docker-compose"
+	@echo "  make docker-down   - Stop services with docker-compose"
+	@echo "  make fmt           - Format Go code"
+	@echo "  make lint          - Run linter"
+	@echo ""
+	@echo "Database Migration Commands:"
+	@echo "  make migrate-up      - Apply all pending migrations"
+	@echo "  make migrate-down    - Rollback the last migration"
+	@echo "  make migrate-status  - Show migration status"
+	@echo "  make migrate-version - Show current migration version"
+	@echo "  make migrate-create  - Create a new migration file"
+	@echo "  make migrate-force   - Force set migration version (emergency use)"
 
 # Start the entire project
 start:
@@ -121,9 +128,34 @@ deps:
 	@echo "Dependencies installed"
 
 # Run database migrations
-migrate:
-	@echo "Migrations run automatically on startup"
-	@echo "To run manually, use: go run src/cmd/api/main.go"
+migrate-up:
+	@echo "Running migrations..."
+	@go run src/cmd/migrate/main.go up
+
+migrate-down:
+	@echo "Rolling back last migration..."
+	@go run src/cmd/migrate/main.go down
+
+migrate-status:
+	@echo "Checking migration status..."
+	@go run src/cmd/migrate/main.go status
+
+migrate-version:
+	@echo "Getting migration version..."
+	@go run src/cmd/migrate/main.go version
+
+migrate-force:
+	@echo "Force migration version (use with caution)..."
+	@read -p "Enter version number: " version; \
+	go run src/cmd/migrate/main.go force $$version
+
+migrate-create:
+	@read -p "Enter migration name: " name; \
+	migrate create -ext sql -dir migrations -seq $$name; \
+	echo "Migration files created in migrations/"
+
+# Legacy migrate command (for backwards compatibility)
+migrate: migrate-up
 
 # Development mode with hot reload (requires air)
 dev:

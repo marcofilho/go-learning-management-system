@@ -1,9 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/handler"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/middleware"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/config"
@@ -47,11 +52,14 @@ func main() {
 
 	gormDB := db.GetDB()
 
+	// Run database migrations
 	log.Println("🔄 Running migrations...")
-	if err := database.RunMigrations(gormDB); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+	if err := runMigrations(&cfg.Database); err != nil {
+		log.Printf("⚠️  Migration warning: %v", err)
+		log.Println("💡 You can run migrations manually with: go run src/cmd/migrate/main.go up")
+	} else {
+		log.Println("✅ Migrations completed")
 	}
-	log.Println("✅ Migrations completed")
 
 	userRepo := repository.NewPostgresUserRepository(gormDB)
 	courseRepo := repository.NewPostgresCourseRepository(gormDB)
@@ -86,4 +94,40 @@ func main() {
 	if err := http.ListenAndServe(addr, router); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
+}
+
+// runMigrations executes database migrations using golang-migrate
+func runMigrations(cfg *config.DatabaseConfig) error {
+	// Build database connection string
+	dbURL := cfg.GetDatabaseURL()
+
+	// Open database connection for migrations
+	sqlDB, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		return err
+	}
+	defer sqlDB.Close()
+
+	// Create postgres driver instance
+	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
+	if err != nil {
+		return err
+	}
+
+	// Create migrate instance
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://migrations",
+		"postgres",
+		driver,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Apply all pending migrations
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	return nil
 }

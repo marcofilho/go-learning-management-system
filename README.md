@@ -216,7 +216,25 @@ See [.env.example](.env.example) for all available configuration options:
 
 ## Database Migrations
 
-The application uses GORM's AutoMigrate feature. Migrations run automatically when the application starts. All tables and indexes are created based on the entity definitions.
+The project uses **golang-migrate** for versioned database migrations. Migrations are stored in the `migrations/` directory and run automatically on application startup.
+
+### Migration Commands
+
+```bash
+make migrate-up       # Apply all pending migrations
+make migrate-down     # Rollback last migration
+make migrate-status   # Check migration status
+make migrate-version  # Show current version
+make migrate-create   # Create new migration files
+```
+
+For detailed migration documentation, see [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md).
+
+### Schema Version
+
+Current schema version: **1** (initial_schema)
+
+**Tables**: users, courses, modules, lessons, lesson_versions, course_enrollments, audit_logs
 
 ## Development
 
