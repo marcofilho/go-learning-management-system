@@ -193,3 +193,17 @@ func TestPostgresCourseRepository_GetByID_NotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, entity.ErrNotFound, err)
 }
+
+func TestPostgresCourseRepository_List_Empty(t *testing.T) {
+	db, _ := setupCourseTestDB(t)
+	repo := repository.NewPostgresCourseRepository(db)
+
+	// Drop the user created in setup to ensure no courses are created
+	err := db.Exec("DELETE FROM users").Error
+	assert.NoError(t, err)
+
+	courses, err := repo.List(context.Background(), &domainRepository.CourseFilter{Limit: 10, Offset: 0})
+	assert.NoError(t, err)
+	assert.NotNil(t, courses)
+	assert.Len(t, courses, 0)
+}
