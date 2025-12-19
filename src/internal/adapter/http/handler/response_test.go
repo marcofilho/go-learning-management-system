@@ -36,7 +36,7 @@ func TestRespondWithError(t *testing.T) {
 func TestMapEntityToUserDTO(t *testing.T) {
 	now := time.Now()
 	user := &entity.User{
-		ID:        uuid.New().String(),
+		ID:        uuid.New(),
 		Email:     "test@example.com",
 		FirstName: "Test",
 		LastName:  "User",
@@ -48,7 +48,7 @@ func TestMapEntityToUserDTO(t *testing.T) {
 
 	dto := handler.MapEntityToUserDTO(user)
 
-	assert.Equal(t, user.ID, dto.ID)
+	assert.Equal(t, user.ID.String(), dto.ID)
 	assert.Equal(t, user.Email, dto.Email)
 	assert.Equal(t, user.FirstName, dto.FirstName)
 	assert.Equal(t, user.LastName, dto.LastName)
@@ -61,10 +61,10 @@ func TestMapEntityToUserDTO(t *testing.T) {
 func TestMapEntityToCourseDTO(t *testing.T) {
 	now := time.Now()
 	course := &entity.Course{
-		ID:              uuid.New().String(),
+		ID:              uuid.New(),
 		Title:           "Test Course",
 		Description:     "Test Description",
-		InstructorID:    uuid.New().String(),
+		InstructorID:    uuid.New(),
 		DifficultyLevel: entity.DifficultyLevelBeginner,
 		CreatedAt:       now,
 		UpdatedAt:       now,
@@ -72,10 +72,10 @@ func TestMapEntityToCourseDTO(t *testing.T) {
 
 	dto := handler.MapEntityToCourseDTO(course)
 
-	assert.Equal(t, course.ID, dto.ID)
+	assert.Equal(t, course.ID.String(), dto.ID)
 	assert.Equal(t, course.Title, dto.Title)
 	assert.Equal(t, course.Description, dto.Description)
-	assert.Equal(t, course.InstructorID, dto.InstructorID)
+	assert.Equal(t, course.InstructorID.String(), dto.InstructorID)
 	assert.Equal(t, string(course.DifficultyLevel), dto.DifficultyLevel)
 	assert.Equal(t, course.CreatedAt, dto.CreatedAt)
 	assert.Equal(t, course.UpdatedAt, dto.UpdatedAt)
@@ -84,8 +84,8 @@ func TestMapEntityToCourseDTO(t *testing.T) {
 func TestMapEntityToEnrollmentDTO(t *testing.T) {
 	now := time.Now()
 	enrollment := &entity.Enrollment{
-		StudentID:      uuid.New().String(),
-		CourseID:       uuid.New().String(),
+		StudentID:      uuid.New(),
+		CourseID:       uuid.New(),
 		EnrollmentDate: now,
 		Status:         entity.EnrollmentStatusActive,
 		CreatedAt:      now,
@@ -94,8 +94,8 @@ func TestMapEntityToEnrollmentDTO(t *testing.T) {
 
 	dto := handler.MapEntityToEnrollmentDTO(enrollment)
 
-	assert.Equal(t, enrollment.StudentID, dto.StudentID)
-	assert.Equal(t, enrollment.CourseID, dto.CourseID)
+	assert.Equal(t, enrollment.StudentID.String(), dto.StudentID)
+	assert.Equal(t, enrollment.CourseID.String(), dto.CourseID)
 	assert.Equal(t, enrollment.EnrollmentDate, dto.EnrollmentDate)
 	assert.Equal(t, string(enrollment.Status), dto.Status)
 	assert.Equal(t, enrollment.CreatedAt, dto.CreatedAt)

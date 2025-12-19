@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 )
@@ -23,7 +24,7 @@ func NewCourseUseCase(courseRepo repository.CourseRepository, userRepo repositor
 	}
 }
 
-func (uc *CourseUseCase) CreateCourse(ctx context.Context, title, description, instructorID string, difficultyLevel entity.DifficultyLevel) (*entity.Course, error) {
+func (uc *CourseUseCase) CreateCourse(ctx context.Context, title, description string, instructorID uuid.UUID, difficultyLevel entity.DifficultyLevel) (*entity.Course, error) {
 	instructor, err := uc.userRepo.GetByID(ctx, instructorID)
 	if err != nil {
 		return nil, entity.ErrNotFound
@@ -42,7 +43,7 @@ func (uc *CourseUseCase) CreateCourse(ctx context.Context, title, description, i
 	return course, nil
 }
 
-func (uc *CourseUseCase) GetCourseByID(ctx context.Context, id string) (*entity.Course, error) {
+func (uc *CourseUseCase) GetCourseByID(ctx context.Context, id uuid.UUID) (*entity.Course, error) {
 	return uc.courseRepo.GetByID(ctx, id)
 }
 
@@ -50,11 +51,11 @@ func (uc *CourseUseCase) ListCourses(ctx context.Context, filter *repository.Cou
 	return uc.courseRepo.List(ctx, filter)
 }
 
-func (uc *CourseUseCase) GetCoursesByInstructor(ctx context.Context, instructorID string) ([]*entity.Course, error) {
+func (uc *CourseUseCase) GetCoursesByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error) {
 	return uc.courseRepo.GetByInstructor(ctx, instructorID)
 }
 
-func (uc *CourseUseCase) UpdateCourse(ctx context.Context, course *entity.Course, userID string) error {
+func (uc *CourseUseCase) UpdateCourse(ctx context.Context, course *entity.Course, userID uuid.UUID) error {
 	if err := course.Validate(); err != nil {
 		return err
 	}

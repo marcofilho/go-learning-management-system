@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
@@ -35,7 +36,11 @@ func (h *LessonHandler) CreateLesson(w http.ResponseWriter, r *http.Request) {
 	// @Security BearerAuth
 	// @Router /modules/{moduleId}/lessons [post]
 	vars := mux.Vars(r)
-	moduleID := vars["moduleId"]
+	moduleID, err := uuid.Parse(vars["moduleId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid module ID format")
+		return
+	}
 
 	var req dto.CreateLessonRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -56,14 +61,14 @@ func (h *LessonHandler) CreateLesson(w http.ResponseWriter, r *http.Request) {
 		AttachmentURL: req.AttachmentURL,
 	}
 
-	if err := h.lessonUseCase.CreateLesson(r.Context(), lesson, userID); err != nil {
+	if err := h.lessonUseCase.CreateLesson(r.Context(), lesson, userID.String()); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
 
 	response := dto.LessonVersionDTO{
-		ID:            lesson.ID,
-		ModuleID:      lesson.ModuleID,
+		ID:            lesson.ID.String(),
+		ModuleID:      lesson.ModuleID.String(),
 		VersionNumber: lesson.VersionNumber,
 		Content:       lesson.Content,
 		VideoURL:      lesson.VideoURL,
@@ -106,7 +111,11 @@ func (h *LessonHandler) CreateLessonVersion(w http.ResponseWriter, r *http.Reque
 	// @Security BearerAuth
 	// @Router /modules/{moduleId}/lessons [post]
 	vars := mux.Vars(r)
-	lessonID := vars["lessonId"]
+	lessonID, err := uuid.Parse(vars["lessonId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid lesson ID format")
+		return
+	}
 
 	var req dto.CreateLessonVersionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -126,14 +135,14 @@ func (h *LessonHandler) CreateLessonVersion(w http.ResponseWriter, r *http.Reque
 		AttachmentURL: req.AttachmentURL,
 	}
 
-	if err := h.lessonUseCase.CreateLessonVersion(r.Context(), lessonID, newVersion, userID); err != nil {
+	if err := h.lessonUseCase.CreateLessonVersion(r.Context(), lessonID.String(), newVersion, userID.String()); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
 
 	response := dto.LessonVersionDTO{
-		ID:            newVersion.ID,
-		ModuleID:      newVersion.ModuleID,
+		ID:            newVersion.ID.String(),
+		ModuleID:      newVersion.ModuleID.String(),
 		VersionNumber: newVersion.VersionNumber,
 		Content:       newVersion.Content,
 		VideoURL:      newVersion.VideoURL,
@@ -158,9 +167,13 @@ func (h *LessonHandler) GetModuleLessons(w http.ResponseWriter, r *http.Request)
 	// @Security BearerAuth
 	// @Router /modules/{moduleId}/lessons [get]
 	vars := mux.Vars(r)
-	moduleID := vars["moduleId"]
+	moduleID, err := uuid.Parse(vars["moduleId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid module ID format")
+		return
+	}
 
-	lessons, err := h.lessonUseCase.GetLatestLessonsByModule(r.Context(), moduleID)
+	lessons, err := h.lessonUseCase.GetLatestLessonsByModule(r.Context(), moduleID.String())
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -169,8 +182,8 @@ func (h *LessonHandler) GetModuleLessons(w http.ResponseWriter, r *http.Request)
 	var response []dto.LessonVersionDTO
 	for _, lesson := range lessons {
 		response = append(response, dto.LessonVersionDTO{
-			ID:            lesson.ID,
-			ModuleID:      lesson.ModuleID,
+			ID:            lesson.ID.String(),
+			ModuleID:      lesson.ModuleID.String(),
 			VersionNumber: lesson.VersionNumber,
 			Content:       lesson.Content,
 			VideoURL:      lesson.VideoURL,
@@ -196,9 +209,13 @@ func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Requ
 	// @Security BearerAuth
 	// @Router /lessons/{lessonId}/all-versions [get]
 	vars := mux.Vars(r)
-	lessonID := vars["lessonId"]
+	lessonID, err := uuid.Parse(vars["lessonId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid lesson ID format")
+		return
+	}
 
-	versions, err := h.lessonUseCase.GetAllLessonVersions(r.Context(), lessonID)
+	versions, err := h.lessonUseCase.GetAllLessonVersions(r.Context(), lessonID.String())
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -207,8 +224,8 @@ func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Requ
 	var response []dto.LessonVersionDTO
 	for _, version := range versions {
 		response = append(response, dto.LessonVersionDTO{
-			ID:            version.ID,
-			ModuleID:      version.ModuleID,
+			ID:            version.ID.String(),
+			ModuleID:      version.ModuleID.String(),
 			VersionNumber: version.VersionNumber,
 			Content:       version.Content,
 			VideoURL:      version.VideoURL,
@@ -235,7 +252,11 @@ func (h *LessonHandler) DeleteLesson(w http.ResponseWriter, r *http.Request) {
 	// @Security BearerAuth
 	// @Router /lessons/{lessonId} [delete]
 	vars := mux.Vars(r)
-	lessonID := vars["lessonId"]
+	lessonID, err := uuid.Parse(vars["lessonId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid lesson ID format")
+		return
+	}
 
 	userID, ok := GetUserIDFromContext(r)
 	if !ok {
@@ -243,7 +264,7 @@ func (h *LessonHandler) DeleteLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.lessonUseCase.DeleteLesson(r.Context(), lessonID, userID); err != nil {
+	if err := h.lessonUseCase.DeleteLesson(r.Context(), lessonID.String(), userID.String()); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}

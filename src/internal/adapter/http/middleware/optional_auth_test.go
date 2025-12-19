@@ -33,7 +33,7 @@ func TestOptionalAuthMiddleware(t *testing.T) {
 
 	// Test case 2: Valid token
 	user := &entity.User{
-		ID:    uuid.New().String(),
+		ID:    uuid.New(),
 		Email: "test@test.com",
 		Role:  entity.UserRoleStudent,
 	}

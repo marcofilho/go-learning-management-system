@@ -59,7 +59,7 @@ func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		instructorID = req.InstructorID
+		instructorID = uuid.MustParse(req.InstructorID)
 	}
 
 	difficultyLevel := entity.DifficultyLevel(req.DifficultyLevel)
@@ -89,7 +89,11 @@ func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 // @Router /courses/{id} [get]
 func (h *CourseHandler) GetCourse(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	courseID := vars["id"]
+	courseID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
 
 	course, err := h.courseUseCase.GetCourseByID(r.Context(), courseID)
 	if err != nil {
@@ -117,7 +121,7 @@ func (h *CourseHandler) GetCourse(w http.ResponseWriter, r *http.Request) {
 // @Router /courses [get]
 func (h *CourseHandler) ListCourses(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
-	instructorID := r.URL.Query().Get("instructor_id")
+	instructorIDStr := r.URL.Query().Get("instructor_id")
 	difficultyLevel := r.URL.Query().Get("difficulty_level")
 	activeOnlyStr := r.URL.Query().Get("active_only")
 	limitStr := r.URL.Query().Get("limit")
@@ -128,8 +132,14 @@ func (h *CourseHandler) ListCourses(w http.ResponseWriter, r *http.Request) {
 		Offset: 0,
 	}
 
-	if instructorID != "" {
-		filter.InstructorID = &instructorID
+	if instructorIDStr != "" {
+		instructorID, err := uuid.Parse(instructorIDStr)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid instructor ID format")
+			return
+		}
+		instructorIDStr := instructorID.String()
+		filter.InstructorID = &instructorIDStr
 	}
 
 	if difficultyLevel != "" {
@@ -185,7 +195,11 @@ func (h *CourseHandler) ListCourses(w http.ResponseWriter, r *http.Request) {
 // @Router /courses/{id} [put]
 func (h *CourseHandler) UpdateCourse(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	courseID := vars["id"]
+	courseID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
 
 	userID, ok := GetUserIDFromContext(r)
 	if !ok {
@@ -245,7 +259,11 @@ func (h *CourseHandler) DeleteCourse(w http.ResponseWriter, r *http.Request) {
 	// @Security BearerAuth
 	// @Router /courses/{id} [delete]
 	vars := mux.Vars(r)
-	courseID := vars["id"]
+	courseID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
 
 	userID, ok := GetUserIDFromContext(r)
 	if !ok {
@@ -253,7 +271,7 @@ func (h *CourseHandler) DeleteCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.courseUseCase.DeleteCourse(r.Context(), courseID, userID); err != nil {
+	if err := h.courseUseCase.DeleteCourse(r.Context(), courseID.String(), userID.String()); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}

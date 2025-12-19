@@ -1,15 +1,16 @@
 package middleware
 
 import (
-"context"
-"net/http"
-"net/http/httptest"
-"testing"
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
-"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/infrastructure/auth"
-"github.com/stretchr/testify/assert"
-"github.com/stretchr/testify/mock"
+	"github.com/google/uuid"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/infrastructure/auth"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type MockTokenProvider struct {
@@ -32,14 +33,14 @@ func (m *MockTokenProvider) ValidateToken(tokenString string) (*auth.Claims, err
 func TestAuthMiddleware_ValidToken(t *testing.T) {
 	mockProvider := new(MockTokenProvider)
 	claims := &auth.Claims{
-		UserID: "user-123",
+		UserID: uuid.New(),
 		Email:  "test@example.com",
 		Role:   entity.UserRoleStudent,
 	}
 	mockProvider.On("ValidateToken", "valid-token").Return(claims, nil)
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-c, ok := r.Context().Value(UserContextKey).(*auth.Claims)
+		c, ok := r.Context().Value(UserContextKey).(*auth.Claims)
 		assert.True(t, ok)
 		assert.NotNil(t, c)
 		w.WriteHeader(http.StatusOK)
@@ -61,8 +62,8 @@ c, ok := r.Context().Value(UserContextKey).(*auth.Claims)
 func TestAuthMiddleware_MissingHeader(t *testing.T) {
 	mockProvider := new(MockTokenProvider)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-w.WriteHeader(http.StatusOK)
-})
+		w.WriteHeader(http.StatusOK)
+	})
 
 	middleware := AuthMiddleware(mockProvider)
 	wrappedHandler := middleware(handler)
@@ -77,14 +78,14 @@ w.WriteHeader(http.StatusOK)
 
 func TestRequireRole_Admin(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-w.WriteHeader(http.StatusOK)
-})
+		w.WriteHeader(http.StatusOK)
+	})
 
 	middleware := RequireRole(entity.UserRoleAdmin)
 	wrappedHandler := middleware(handler)
 
 	claims := &auth.Claims{
-		UserID: "user-123",
+		UserID: uuid.New(),
 		Role:   entity.UserRoleAdmin,
 	}
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -99,14 +100,14 @@ w.WriteHeader(http.StatusOK)
 
 func TestRequireRole_Forbidden(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-w.WriteHeader(http.StatusOK)
-})
+		w.WriteHeader(http.StatusOK)
+	})
 
 	middleware := RequireRole(entity.UserRoleAdmin)
 	wrappedHandler := middleware(handler)
 
 	claims := &auth.Claims{
-		UserID: "user-123",
+		UserID: uuid.New(),
 		Role:   entity.UserRoleStudent,
 	}
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
@@ -38,7 +39,11 @@ func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Reques
 	// @Security BearerAuth
 	// @Router /courses/{id}/enroll [post]
 	vars := mux.Vars(r)
-	courseID := vars["id"]
+	courseID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
 
 	userID, ok := GetUserIDFromContext(r)
 	if !ok {
@@ -49,15 +54,21 @@ func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Reques
 	var req dto.EnrollCourseRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		// If no body provided, assume self-enrollment
-		req.StudentID = userID
+		req.StudentID = userID.String()
 	}
 
 	// If StudentID not provided or empty, use self-enrollment
 	if req.StudentID == "" {
-		req.StudentID = userID
+		req.StudentID = userID.String()
 	}
 
-	enrollment, err := h.enrollmentUseCase.EnrollStudent(r.Context(), req.StudentID, courseID, userID)
+	studentID, err := uuid.Parse(req.StudentID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid student ID format")
+		return
+	}
+
+	enrollment, err := h.enrollmentUseCase.EnrollStudent(r.Context(), studentID.String(), courseID.String(), userID.String())
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -83,10 +94,14 @@ func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Req
 	// @Security BearerAuth
 	// @Router /students/{id}/courses [get]
 	vars := mux.Vars(r)
-	studentID := vars["id"]
+	studentID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid student ID format")
+		return
+	}
 
 	filter := parseEnrollmentFilter(r)
-	enrollments, err := h.enrollmentUseCase.GetStudentCourses(r.Context(), studentID, filter)
+	enrollments, err := h.enrollmentUseCase.GetStudentCourses(r.Context(), studentID.String(), filter)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -117,10 +132,14 @@ func (h *EnrollmentHandler) GetCourseStudents(w http.ResponseWriter, r *http.Req
 	// @Security BearerAuth
 	// @Router /courses/{id}/students [get]
 	vars := mux.Vars(r)
-	courseID := vars["id"]
+	courseID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
 
 	filter := parseEnrollmentFilter(r)
-	enrollments, err := h.enrollmentUseCase.GetCourseStudents(r.Context(), courseID, filter)
+	enrollments, err := h.enrollmentUseCase.GetCourseStudents(r.Context(), courseID.String(), filter)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return

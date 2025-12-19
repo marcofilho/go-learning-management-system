@@ -28,9 +28,9 @@ func TestLessonHandler_CreateLesson_Success(t *testing.T) {
 	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 	handler := NewLessonHandler(lessonUC)
 
-	moduleID := uuid.New().String()
-	instructorID := uuid.New().String()
-	courseID := uuid.New().String()
+	moduleID := uuid.New()
+	instructorID := uuid.New()
+	courseID := uuid.New()
 	module := &entity.Module{ID: moduleID, CourseID: courseID}
 	course := &entity.Course{ID: courseID, InstructorID: instructorID}
 
@@ -44,8 +44,8 @@ func TestLessonHandler_CreateLesson_Success(t *testing.T) {
 		VideoURL: "https://example.com/video.mp4",
 	}
 	body, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest(http.MethodPost, "/modules/"+moduleID+"/lessons", bytes.NewBuffer(body))
-	req = mux.SetURLVars(req, map[string]string{"moduleId": moduleID})
+	req := httptest.NewRequest(http.MethodPost, "/modules/"+moduleID.String()+"/lessons", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"moduleId": moduleID.String()})
 
 	claims := &auth.Claims{
 		UserID: instructorID,
@@ -71,18 +71,18 @@ func TestLessonHandler_GetModuleLessons_Success(t *testing.T) {
 	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 	handler := NewLessonHandler(lessonUC)
 
-	moduleID := uuid.New().String()
+	moduleID := uuid.New()
 	module := &entity.Module{ID: moduleID, Title: "Test Module"}
 	lessons := []*entity.LessonVersion{
-		{ID: uuid.New().String(), ModuleID: moduleID, Content: "Lesson 1", VersionNumber: 1},
-		{ID: uuid.New().String(), ModuleID: moduleID, Content: "Lesson 2", VersionNumber: 1},
+		{ID: uuid.New(), ModuleID: moduleID, Content: "Lesson 1", VersionNumber: 1},
+		{ID: uuid.New(), ModuleID: moduleID, Content: "Lesson 2", VersionNumber: 1},
 	}
 
 	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil)
 	mockLessonRepo.On("GetLatestByModule", mock.Anything, moduleID).Return(lessons, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/modules/"+moduleID+"/lessons", nil)
-	req = mux.SetURLVars(req, map[string]string{"moduleId": moduleID})
+	req := httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String()+"/lessons", nil)
+	req = mux.SetURLVars(req, map[string]string{"moduleId": moduleID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetModuleLessons(rr, req)
@@ -100,16 +100,16 @@ func TestLessonHandler_GetAllLessonVersions_Success(t *testing.T) {
 	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 	handler := NewLessonHandler(lessonUC)
 
-	lessonID := uuid.New().String()
+	lessonID := uuid.New()
 	versions := []*entity.LessonVersion{
-		{ID: lessonID, ModuleID: uuid.New().String(), Content: "Version 1", VersionNumber: 1},
-		{ID: lessonID, ModuleID: uuid.New().String(), Content: "Version 2", VersionNumber: 2},
+		{ID: lessonID, ModuleID: uuid.New(), Content: "Version 1", VersionNumber: 1},
+		{ID: lessonID, ModuleID: uuid.New(), Content: "Version 2", VersionNumber: 2},
 	}
 
 	mockLessonRepo.On("GetAllVersions", mock.Anything, lessonID).Return(versions, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/lessons/"+lessonID+"/all-versions", nil)
-	req = mux.SetURLVars(req, map[string]string{"lessonId": lessonID})
+	req := httptest.NewRequest(http.MethodGet, "/lessons/"+lessonID.String()+"/all-versions", nil)
+	req = mux.SetURLVars(req, map[string]string{"lessonId": lessonID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetAllLessonVersions(rr, req)
@@ -127,10 +127,10 @@ func TestLessonHandler_DeleteLesson_Success(t *testing.T) {
 	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 	handler := NewLessonHandler(lessonUC)
 
-	lessonID := uuid.New().String()
-	instructorID := uuid.New().String()
-	moduleID := uuid.New().String()
-	courseID := uuid.New().String()
+	lessonID := uuid.New()
+	instructorID := uuid.New()
+	moduleID := uuid.New()
+	courseID := uuid.New()
 	lesson := &entity.LessonVersion{ID: lessonID, ModuleID: moduleID, Content: "Content"}
 	module := &entity.Module{ID: moduleID, CourseID: courseID}
 	course := &entity.Course{ID: courseID, InstructorID: instructorID}
@@ -141,8 +141,8 @@ func TestLessonHandler_DeleteLesson_Success(t *testing.T) {
 	mockLessonRepo.On("Delete", mock.Anything, lessonID).Return(nil)
 	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
-	req := httptest.NewRequest(http.MethodDelete, "/lessons/"+lessonID, nil)
-	req = mux.SetURLVars(req, map[string]string{"lessonId": lessonID})
+	req := httptest.NewRequest(http.MethodDelete, "/lessons/"+lessonID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"lessonId": lessonID.String()})
 
 	claims := &auth.Claims{
 		UserID: instructorID,

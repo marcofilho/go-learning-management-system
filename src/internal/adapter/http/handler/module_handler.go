@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
@@ -35,7 +36,11 @@ func (h *ModuleHandler) CreateModule(w http.ResponseWriter, r *http.Request) {
 	// @Security BearerAuth
 	// @Router /courses/{courseId}/modules [post]
 	vars := mux.Vars(r)
-	courseID := vars["courseId"]
+	courseID, err := uuid.Parse(vars["courseId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
 
 	var req dto.CreateModuleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -55,14 +60,14 @@ func (h *ModuleHandler) CreateModule(w http.ResponseWriter, r *http.Request) {
 		OrderIndex: req.OrderIndex,
 	}
 
-	if err := h.moduleUseCase.CreateModule(r.Context(), module, userID); err != nil {
+	if err := h.moduleUseCase.CreateModule(r.Context(), module, userID.String()); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
 
 	response := dto.ModuleDTO{
-		ID:         module.ID,
-		CourseID:   module.CourseID,
+		ID:         module.ID.String(),
+		CourseID:   module.CourseID.String(),
 		Title:      module.Title,
 		OrderIndex: module.OrderIndex,
 		CreatedAt:  module.CreatedAt,
@@ -86,9 +91,13 @@ func (h *ModuleHandler) GetCourseModules(w http.ResponseWriter, r *http.Request)
 	// @Security BearerAuth
 	// @Router /courses/{courseId}/modules [get]
 	vars := mux.Vars(r)
-	courseID := vars["courseId"]
+	courseID, err := uuid.Parse(vars["courseId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
 
-	modules, err := h.moduleUseCase.GetModulesByCourse(r.Context(), courseID)
+	modules, err := h.moduleUseCase.GetModulesByCourse(r.Context(), courseID.String())
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -97,8 +106,8 @@ func (h *ModuleHandler) GetCourseModules(w http.ResponseWriter, r *http.Request)
 	var response []dto.ModuleDTO
 	for _, module := range modules {
 		response = append(response, dto.ModuleDTO{
-			ID:         module.ID,
-			CourseID:   module.CourseID,
+			ID:         module.ID.String(),
+			CourseID:   module.CourseID.String(),
 			Title:      module.Title,
 			OrderIndex: module.OrderIndex,
 			CreatedAt:  module.CreatedAt,
@@ -123,17 +132,21 @@ func (h *ModuleHandler) GetModule(w http.ResponseWriter, r *http.Request) {
 	// @Security BearerAuth
 	// @Router /modules/{id} [get]
 	vars := mux.Vars(r)
-	moduleID := vars["id"]
+	moduleID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid module ID format")
+		return
+	}
 
-	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID)
+	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID.String())
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
 
 	response := dto.ModuleDTO{
-		ID:         module.ID,
-		CourseID:   module.CourseID,
+		ID:         module.ID.String(),
+		CourseID:   module.CourseID.String(),
 		Title:      module.Title,
 		OrderIndex: module.OrderIndex,
 		CreatedAt:  module.CreatedAt,
@@ -160,7 +173,11 @@ func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
 	// @Security BearerAuth
 	// @Router /modules/{id} [put]
 	vars := mux.Vars(r)
-	moduleID := vars["id"]
+	moduleID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid module ID format")
+		return
+	}
 
 	var req dto.UpdateModuleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -174,7 +191,7 @@ func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID)
+	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID.String())
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -187,14 +204,14 @@ func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
 		module.OrderIndex = req.OrderIndex
 	}
 
-	if err := h.moduleUseCase.UpdateModule(r.Context(), module, userID); err != nil {
+	if err := h.moduleUseCase.UpdateModule(r.Context(), module, userID.String()); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
 
 	response := dto.ModuleDTO{
-		ID:         module.ID,
-		CourseID:   module.CourseID,
+		ID:         module.ID.String(),
+		CourseID:   module.CourseID.String(),
 		Title:      module.Title,
 		OrderIndex: module.OrderIndex,
 		CreatedAt:  module.CreatedAt,
@@ -219,7 +236,11 @@ func (h *ModuleHandler) DeleteModule(w http.ResponseWriter, r *http.Request) {
 	// @Security BearerAuth
 	// @Router /modules/{id} [delete]
 	vars := mux.Vars(r)
-	moduleID := vars["id"]
+	moduleID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid module ID format")
+		return
+	}
 
 	userID, ok := GetUserIDFromContext(r)
 	if !ok {
@@ -227,7 +248,7 @@ func (h *ModuleHandler) DeleteModule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.moduleUseCase.DeleteModule(r.Context(), moduleID, userID); err != nil {
+	if err := h.moduleUseCase.DeleteModule(r.Context(), moduleID.String(), userID.String()); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}

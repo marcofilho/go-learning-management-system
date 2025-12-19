@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/middleware"
@@ -102,8 +103,8 @@ func TestUserHandler_GetUser_Success(t *testing.T) {
 	user, _ := entity.NewUser("test@example.com", "password123", "John", "Doe", entity.UserRoleStudent)
 	mockRepo.On("GetByID", mock.Anything, user.ID).Return(user, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/users/"+user.ID, nil)
-	req = mux.SetURLVars(req, map[string]string{"id": user.ID})
+	req := httptest.NewRequest(http.MethodGet, "/users/"+user.ID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"id": user.ID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetUserByID(rr, req)
@@ -125,8 +126,9 @@ func TestUserHandler_ListUsers_Success(t *testing.T) {
 	mockRepo.On("List", mock.Anything, 10, 0).Return(users, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/users", nil)
+	adminID := uuid.New()
 	claims := &auth.Claims{
-		UserID: "admin-id",
+		UserID: adminID,
 		Email:  "admin@example.com",
 		Role:   entity.UserRoleAdmin,
 	}

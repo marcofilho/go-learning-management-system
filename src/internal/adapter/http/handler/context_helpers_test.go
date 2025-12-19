@@ -15,7 +15,7 @@ import (
 func TestGetUserIDFromContext(t *testing.T) {
 	t.Run("should return user id when user is in context", func(t *testing.T) {
 		userID := uuid.New()
-		ctx := context.WithValue(context.Background(), middleware.UserContextKey, &auth.Claims{UserID: userID.String()})
+		ctx := context.WithValue(context.Background(), middleware.UserContextKey, &auth.Claims{UserID: userID})
 		req := httptest.NewRequest(http.MethodGet, "/", nil).WithContext(ctx)
 
 		retrievedUserID, ok := GetUserIDFromContext(req)
@@ -34,7 +34,7 @@ func TestGetUserIDFromContext(t *testing.T) {
 
 func TestGetUserFromContext(t *testing.T) {
 	t.Run("should return user when user is in context", func(t *testing.T) {
-		claims := &auth.Claims{UserID: uuid.New().String()}
+		claims := &auth.Claims{UserID: uuid.New()}
 		ctx := context.WithValue(context.Background(), middleware.UserContextKey, claims)
 
 		retrievedClaims, ok := GetUserFromContext(ctx)

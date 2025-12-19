@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 )
 
@@ -16,9 +17,9 @@ type CourseFilter struct {
 
 type CourseRepository interface {
 	Create(ctx context.Context, course *entity.Course) error
-	GetByID(ctx context.Context, id string) (*entity.Course, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*entity.Course, error)
 	Update(ctx context.Context, course *entity.Course) error
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id uuid.UUID) error
 	List(ctx context.Context, filter *CourseFilter) ([]*entity.Course, error)
-	GetByInstructor(ctx context.Context, instructorID string) ([]*entity.Course, error)
+	GetByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error)
 }

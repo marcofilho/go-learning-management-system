@@ -27,7 +27,7 @@ func TestCourseHandler_CreateCourse_Success(t *testing.T) {
 	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
 	handler := NewCourseHandler(courseUC)
 
-	instructorID := uuid.New().String()
+	instructorID := uuid.New()
 	instructor, _ := entity.NewUser("inst@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	instructor.ID = instructorID
 
@@ -67,19 +67,19 @@ func TestCourseHandler_GetCourse_Success(t *testing.T) {
 	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
 	handler := NewCourseHandler(courseUC)
 
-	courseID := uuid.New().String()
+	courseID := uuid.New()
 	course := &entity.Course{
 		ID:              courseID,
 		Title:           "Test Course",
 		Description:     "Test Description",
-		InstructorID:    uuid.New().String(),
+		InstructorID:    uuid.New(),
 		DifficultyLevel: entity.DifficultyLevelBeginner,
 	}
 
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetCourse(rr, req)
@@ -96,11 +96,11 @@ func TestCourseHandler_GetCourse_NotFound(t *testing.T) {
 	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
 	handler := NewCourseHandler(courseUC)
 
-	courseID := uuid.New().String()
+	courseID := uuid.New()
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(nil, entity.ErrNotFound)
 
-	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetCourse(rr, req)
@@ -118,8 +118,8 @@ func TestCourseHandler_ListCourses_Success(t *testing.T) {
 	handler := NewCourseHandler(courseUC)
 
 	courses := []*entity.Course{
-		{ID: uuid.New().String(), Title: "Course 1"},
-		{ID: uuid.New().String(), Title: "Course 2"},
+		{ID: uuid.New(), Title: "Course 1"},
+		{ID: uuid.New(), Title: "Course 2"},
 	}
 
 	mockCourseRepo.On("List", mock.Anything, mock.AnythingOfType("*repository.CourseFilter")).Return(courses, nil)
@@ -141,8 +141,8 @@ func TestCourseHandler_DeleteCourse_Success(t *testing.T) {
 	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
 	handler := NewCourseHandler(courseUC)
 
-	courseID := uuid.New().String()
-	instructorID := uuid.New().String()
+	courseID := uuid.New()
+	instructorID := uuid.New()
 	instructor, _ := entity.NewUser("inst@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	instructor.ID = instructorID
 	course := &entity.Course{
@@ -156,8 +156,8 @@ func TestCourseHandler_DeleteCourse_Success(t *testing.T) {
 	mockCourseRepo.On("Delete", mock.Anything, courseID).Return(nil)
 	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
-	req := httptest.NewRequest(http.MethodDelete, "/courses/"+courseID, nil)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req := httptest.NewRequest(http.MethodDelete, "/courses/"+courseID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 
 	claims := &auth.Claims{
 		UserID: instructorID,
@@ -182,8 +182,8 @@ func TestCourseHandler_UpdateCourse_Success(t *testing.T) {
 	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
 	handler := NewCourseHandler(courseUC)
 
-	courseID := uuid.New().String()
-	instructorID := uuid.New().String()
+	courseID := uuid.New()
+	instructorID := uuid.New()
 	instructor, _ := entity.NewUser("inst@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	instructor.ID = instructorID
 	course := &entity.Course{
@@ -203,8 +203,8 @@ func TestCourseHandler_UpdateCourse_Success(t *testing.T) {
 		DifficultyLevel: string(entity.DifficultyLevelIntermediate),
 	}
 	body, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest(http.MethodPut, "/courses/"+courseID, bytes.NewBuffer(body))
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req := httptest.NewRequest(http.MethodPut, "/courses/"+courseID.String(), bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 
 	claims := &auth.Claims{
 		UserID: instructorID,

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/middleware"
@@ -132,8 +133,12 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 // @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
-	user, err := h.userUseCase.GetUserByID(r.Context(), id)
+	id, err := uuid.Parse(vars["id"])
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, err, "Invalid user ID format")
+		return
+	}
+	user, err := h.userUseCase.GetUserByID(r.Context(), id.String())
 	if err != nil {
 		RespondWithError(w, http.StatusNotFound, err, "User not found")
 		return
@@ -198,7 +203,11 @@ func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 // @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id, err := uuid.Parse(vars["id"])
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, err, "Invalid user ID format")
+		return
+	}
 	claims, ok := r.Context().Value(middleware.UserContextKey).(*auth.Claims)
 	if !ok {
 		RespondWithError(w, http.StatusUnauthorized, entity.ErrUnauthorized, "User not authenticated")
@@ -208,7 +217,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "Insufficient permissions")
 		return
 	}
-	user, err := h.userUseCase.GetUserByID(r.Context(), id)
+	user, err := h.userUseCase.GetUserByID(r.Context(), id.String())
 	if err != nil {
 		RespondWithError(w, http.StatusNotFound, err, "User not found")
 		return
@@ -253,8 +262,12 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 // @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
-	if err := h.userUseCase.DeleteUser(r.Context(), id); err != nil {
+	id, err := uuid.Parse(vars["id"])
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, err, "Invalid user ID format")
+		return
+	}
+	if err := h.userUseCase.DeleteUser(r.Context(), id.String()); err != nil {
 		RespondWithError(w, http.StatusInternalServerError, err, "Failed to delete user")
 		return
 	}

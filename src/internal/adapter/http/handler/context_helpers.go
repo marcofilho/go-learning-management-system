@@ -4,16 +4,17 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/middleware"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/infrastructure/auth"
 )
 
 // GetUserIDFromContext extracts the user ID from the request context
-func GetUserIDFromContext(r *http.Request) (string, bool) {
+func GetUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
 	claims, ok := r.Context().Value(middleware.UserContextKey).(*auth.Claims)
 	if !ok {
-		return "", false
+		return uuid.Nil, false
 	}
 	return claims.UserID, true
 }

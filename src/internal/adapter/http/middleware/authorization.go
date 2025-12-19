@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
@@ -28,13 +29,19 @@ func RequireCourseOwnership(courseRepo repository.CourseRepository) func(http.Ha
 
 			// Get course ID from URL
 			vars := mux.Vars(r)
-			courseID := vars["id"]
-			if courseID == "" {
-				courseID = vars["courseId"]
+			courseIDStr := vars["id"]
+			if courseIDStr == "" {
+				courseIDStr = vars["courseId"]
 			}
 
-			if courseID == "" {
+			if courseIDStr == "" {
 				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Course ID not found in request")
+				return
+			}
+
+			courseID, err := uuid.Parse(courseIDStr)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid course ID format")
 				return
 			}
 
@@ -74,13 +81,19 @@ func RequireEnrollment(courseRepo repository.CourseRepository, enrollmentRepo re
 			}
 
 			vars := mux.Vars(r)
-			courseID := vars["id"]
-			if courseID == "" {
-				courseID = vars["courseId"]
+			courseIDStr := vars["id"]
+			if courseIDStr == "" {
+				courseIDStr = vars["courseId"]
 			}
 
-			if courseID == "" {
+			if courseIDStr == "" {
 				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Course ID not found in request")
+				return
+			}
+
+			courseID, err := uuid.Parse(courseIDStr)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid course ID format")
 				return
 			}
 
@@ -128,13 +141,19 @@ func RequireModuleOwnership(moduleRepo repository.ModuleRepository, courseRepo r
 			}
 
 			vars := mux.Vars(r)
-			moduleID := vars["id"]
-			if moduleID == "" {
-				moduleID = vars["moduleId"]
+			moduleIDStr := vars["id"]
+			if moduleIDStr == "" {
+				moduleIDStr = vars["moduleId"]
 			}
 
-			if moduleID == "" {
+			if moduleIDStr == "" {
 				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Module ID not found in request")
+				return
+			}
+
+			moduleID, err := uuid.Parse(moduleIDStr)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid module ID format")
 				return
 			}
 
@@ -180,10 +199,16 @@ func RequireAdminOrSelf() func(http.Handler) http.Handler {
 			}
 
 			vars := mux.Vars(r)
-			userID := vars["id"]
+			userIDStr := vars["id"]
 
-			if userID == "" {
+			if userIDStr == "" {
 				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "User ID not found in request")
+				return
+			}
+
+			userID, err := uuid.Parse(userIDStr)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid user ID format")
 				return
 			}
 

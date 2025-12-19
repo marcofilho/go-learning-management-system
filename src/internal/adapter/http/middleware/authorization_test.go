@@ -19,7 +19,7 @@ type MockCourseRepository struct {
 	mock.Mock
 }
 
-func (m *MockCourseRepository) GetByID(ctx context.Context, id string) (*entity.Course, error) {
+func (m *MockCourseRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.Course, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -37,7 +37,7 @@ func (m *MockCourseRepository) Update(ctx context.Context, course *entity.Course
 	return args.Error(0)
 }
 
-func (m *MockCourseRepository) Delete(ctx context.Context, id string) error {
+func (m *MockCourseRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -50,7 +50,7 @@ func (m *MockCourseRepository) List(ctx context.Context, filter *repository.Cour
 	return args.Get(0).([]*entity.Course), args.Error(1)
 }
 
-func (m *MockCourseRepository) GetByInstructor(ctx context.Context, instructorID string) ([]*entity.Course, error) {
+func (m *MockCourseRepository) GetByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error) {
 	args := m.Called(ctx, instructorID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -66,18 +66,18 @@ func TestRequireCourseOwnership(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	courseID := uuid.New().String()
-	instructorID := uuid.New().String()
-	otherUserID := uuid.New().String()
-	adminID := uuid.New().String()
+	courseID := uuid.New()
+	instructorID := uuid.New()
+	otherUserID := uuid.New()
+	adminID := uuid.New()
 
 	course := &entity.Course{ID: courseID, InstructorID: instructorID}
 
 	// Test case 1: Admin user
 	claims := &auth.Claims{UserID: adminID, Role: entity.UserRoleAdmin}
 	ctx := context.WithValue(context.Background(), UserContextKey, claims)
-	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -86,8 +86,8 @@ func TestRequireCourseOwnership(t *testing.T) {
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
 	claims = &auth.Claims{UserID: instructorID, Role: entity.UserRoleInstructor}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -97,8 +97,8 @@ func TestRequireCourseOwnership(t *testing.T) {
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
 	claims = &auth.Claims{UserID: otherUserID, Role: entity.UserRoleStudent}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusForbidden, rr.Code)
@@ -108,8 +108,8 @@ func TestRequireCourseOwnership(t *testing.T) {
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(nil, entity.ErrNotFound).Once()
 	claims = &auth.Claims{UserID: instructorID, Role: entity.UserRoleInstructor}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusNotFound, rr.Code)
@@ -120,7 +120,7 @@ type MockEnrollmentRepository struct {
 	mock.Mock
 }
 
-func (m *MockEnrollmentRepository) GetByStudentAndCourse(ctx context.Context, studentID, courseID string) (*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByStudentAndCourse(ctx context.Context, studentID, courseID uuid.UUID) (*entity.Enrollment, error) {
 	args := m.Called(ctx, studentID, courseID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -138,12 +138,12 @@ func (m *MockEnrollmentRepository) Update(ctx context.Context, enrollment *entit
 	return args.Error(0)
 }
 
-func (m *MockEnrollmentRepository) Delete(ctx context.Context, studentID, courseID string) error {
+func (m *MockEnrollmentRepository) Delete(ctx context.Context, studentID, courseID uuid.UUID) error {
 	args := m.Called(ctx, studentID, courseID)
 	return args.Error(0)
 }
 
-func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID string, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
 	args := m.Called(ctx, studentID, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -151,7 +151,7 @@ func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID s
 	return args.Get(0).([]*entity.Enrollment), args.Error(1)
 }
 
-func (m *MockEnrollmentRepository) GetByCourse(ctx context.Context, courseID string, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
 	args := m.Called(ctx, courseID, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -168,10 +168,10 @@ func TestRequireEnrollment(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	courseID := uuid.New().String()
-	studentID := uuid.New().String()
-	instructorID := uuid.New().String()
-	adminID := uuid.New().String()
+	courseID := uuid.New()
+	studentID := uuid.New()
+	instructorID := uuid.New()
+	adminID := uuid.New()
 
 	course := &entity.Course{ID: courseID, InstructorID: instructorID}
 	enrollment := &entity.Enrollment{StudentID: studentID, CourseID: courseID, Status: entity.EnrollmentStatusActive}
@@ -179,8 +179,8 @@ func TestRequireEnrollment(t *testing.T) {
 	// Test case 1: Admin user
 	claims := &auth.Claims{UserID: adminID, Role: entity.UserRoleAdmin}
 	ctx := context.WithValue(context.Background(), UserContextKey, claims)
-	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -189,8 +189,8 @@ func TestRequireEnrollment(t *testing.T) {
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
 	claims = &auth.Claims{UserID: instructorID, Role: entity.UserRoleInstructor}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -201,8 +201,8 @@ func TestRequireEnrollment(t *testing.T) {
 	mockEnrollmentRepo.On("GetByStudentAndCourse", mock.Anything, studentID, courseID).Return(enrollment, nil).Once()
 	claims = &auth.Claims{UserID: studentID, Role: entity.UserRoleStudent}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -214,8 +214,8 @@ func TestRequireEnrollment(t *testing.T) {
 	mockEnrollmentRepo.On("GetByStudentAndCourse", mock.Anything, studentID, courseID).Return(nil, entity.ErrNotFound).Once()
 	claims = &auth.Claims{UserID: studentID, Role: entity.UserRoleStudent}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req = httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusForbidden, rr.Code)
@@ -227,7 +227,7 @@ type MockModuleRepository struct {
 	mock.Mock
 }
 
-func (m *MockModuleRepository) GetByID(ctx context.Context, id string) (*entity.Module, error) {
+func (m *MockModuleRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.Module, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -245,17 +245,17 @@ func (m *MockModuleRepository) Update(ctx context.Context, module *entity.Module
 	return args.Error(0)
 }
 
-func (m *MockModuleRepository) Delete(ctx context.Context, id string) error {
+func (m *MockModuleRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockModuleRepository) GetNextOrder(ctx context.Context, courseID string) (int, error) {
+func (m *MockModuleRepository) GetNextOrder(ctx context.Context, courseID uuid.UUID) (int, error) {
 	args := m.Called(ctx, courseID)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockModuleRepository) GetByCourse(ctx context.Context, courseID string) ([]*entity.Module, error) {
+func (m *MockModuleRepository) GetByCourse(ctx context.Context, courseID uuid.UUID) ([]*entity.Module, error) {
 	args := m.Called(ctx, courseID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -272,11 +272,11 @@ func TestRequireModuleOwnership(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	moduleID := uuid.New().String()
-	courseID := uuid.New().String()
-	instructorID := uuid.New().String()
-	otherUserID := uuid.New().String()
-	adminID := uuid.New().String()
+	moduleID := uuid.New()
+	courseID := uuid.New()
+	instructorID := uuid.New()
+	otherUserID := uuid.New()
+	adminID := uuid.New()
 
 	module := &entity.Module{ID: moduleID, CourseID: courseID}
 	course := &entity.Course{ID: courseID, InstructorID: instructorID}
@@ -284,8 +284,8 @@ func TestRequireModuleOwnership(t *testing.T) {
 	// Test case 1: Admin user
 	claims := &auth.Claims{UserID: adminID, Role: entity.UserRoleAdmin}
 	ctx := context.WithValue(context.Background(), UserContextKey, claims)
-	req := httptest.NewRequest(http.MethodGet, "/modules/"+moduleID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": moduleID})
+	req := httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
 	rr := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -295,8 +295,8 @@ func TestRequireModuleOwnership(t *testing.T) {
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
 	claims = &auth.Claims{UserID: instructorID, Role: entity.UserRoleInstructor}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": moduleID})
+	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -308,8 +308,8 @@ func TestRequireModuleOwnership(t *testing.T) {
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
 	claims = &auth.Claims{UserID: otherUserID, Role: entity.UserRoleStudent}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": moduleID})
+	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusForbidden, rr.Code)
@@ -324,15 +324,15 @@ func TestRequireAdminOrSelf(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	userID := uuid.New().String()
-	otherUserID := uuid.New().String()
-	adminID := uuid.New().String()
+	userID := uuid.New()
+	otherUserID := uuid.New()
+	adminID := uuid.New()
 
 	// Test case 1: Admin user
 	claims := &auth.Claims{UserID: adminID, Role: entity.UserRoleAdmin}
 	ctx := context.WithValue(context.Background(), UserContextKey, claims)
-	req := httptest.NewRequest(http.MethodGet, "/users/"+otherUserID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": otherUserID})
+	req := httptest.NewRequest(http.MethodGet, "/users/"+otherUserID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": otherUserID.String()})
 	rr := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -340,8 +340,8 @@ func TestRequireAdminOrSelf(t *testing.T) {
 	// Test case 2: Accessing own resource
 	claims = &auth.Claims{UserID: userID, Role: entity.UserRoleStudent}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/users/"+userID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": userID})
+	req = httptest.NewRequest(http.MethodGet, "/users/"+userID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": userID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -349,15 +349,15 @@ func TestRequireAdminOrSelf(t *testing.T) {
 	// Test case 3: Accessing other user's resource
 	claims = &auth.Claims{UserID: otherUserID, Role: entity.UserRoleStudent}
 	ctx = context.WithValue(context.Background(), UserContextKey, claims)
-	req = httptest.NewRequest(http.MethodGet, "/users/"+userID, nil).WithContext(ctx)
-	req = mux.SetURLVars(req, map[string]string{"id": userID})
+	req = httptest.NewRequest(http.MethodGet, "/users/"+userID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": userID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusForbidden, rr.Code)
 
 	// Test case 4: No user in context
-	req = httptest.NewRequest(http.MethodGet, "/users/"+userID, nil)
-	req = mux.SetURLVars(req, map[string]string{"id": userID})
+	req = httptest.NewRequest(http.MethodGet, "/users/"+userID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"id": userID.String()})
 	rr = httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
@@ -365,7 +365,7 @@ func TestRequireAdminOrSelf(t *testing.T) {
 
 func TestGetUserFromContext(t *testing.T) {
 	// Test case 1: User in context
-	claims := &auth.Claims{UserID: uuid.New().String(), Role: entity.UserRoleStudent}
+	claims := &auth.Claims{UserID: uuid.New(), Role: entity.UserRoleStudent}
 	ctx := context.WithValue(context.Background(), UserContextKey, claims)
 	retrievedClaims, ok := GetUserFromContext(ctx)
 	assert.True(t, ok)

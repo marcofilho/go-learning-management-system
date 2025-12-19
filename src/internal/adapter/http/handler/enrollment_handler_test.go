@@ -28,8 +28,8 @@ func TestEnrollmentHandler_EnrollInCourse_SelfEnrollment(t *testing.T) {
 	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
 	handler := NewEnrollmentHandler(enrollmentUC)
 
-	studentID := uuid.New().String()
-	courseID := uuid.New().String()
+	studentID := uuid.New()
+	courseID := uuid.New()
 	student, _ := entity.NewUser("student@example.com", "password123", "John", "Student", entity.UserRoleStudent)
 	student.ID = studentID
 	course := &entity.Course{ID: courseID, Title: "Test Course"}
@@ -42,8 +42,8 @@ func TestEnrollmentHandler_EnrollInCourse_SelfEnrollment(t *testing.T) {
 
 	reqBody := dto.EnrollCourseRequest{}
 	body, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID+"/enroll", bytes.NewBuffer(body))
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID.String()+"/enroll", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 
 	claims := &auth.Claims{
 		UserID: studentID,
@@ -69,16 +69,16 @@ func TestEnrollmentHandler_GetStudentCourses_Success(t *testing.T) {
 	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
 	handler := NewEnrollmentHandler(enrollmentUC)
 
-	studentID := uuid.New().String()
+	studentID := uuid.New()
 	enrollments := []*entity.Enrollment{
-		{StudentID: studentID, CourseID: uuid.New().String(), Status: entity.EnrollmentStatusActive},
-		{StudentID: studentID, CourseID: uuid.New().String(), Status: entity.EnrollmentStatusActive},
+		{StudentID: studentID, CourseID: uuid.New(), Status: entity.EnrollmentStatusActive},
+		{StudentID: studentID, CourseID: uuid.New(), Status: entity.EnrollmentStatusActive},
 	}
 
 	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/students/"+studentID+"/courses", nil)
-	req = mux.SetURLVars(req, map[string]string{"id": studentID})
+	req := httptest.NewRequest(http.MethodGet, "/students/"+studentID.String()+"/courses", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": studentID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetStudentCourses(rr, req)
@@ -96,16 +96,16 @@ func TestEnrollmentHandler_GetCourseStudents_Success(t *testing.T) {
 	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
 	handler := NewEnrollmentHandler(enrollmentUC)
 
-	courseID := uuid.New().String()
+	courseID := uuid.New()
 	enrollments := []*entity.Enrollment{
-		{StudentID: uuid.New().String(), CourseID: courseID, Status: entity.EnrollmentStatusActive},
-		{StudentID: uuid.New().String(), CourseID: courseID, Status: entity.EnrollmentStatusActive},
+		{StudentID: uuid.New(), CourseID: courseID, Status: entity.EnrollmentStatusActive},
+		{StudentID: uuid.New(), CourseID: courseID, Status: entity.EnrollmentStatusActive},
 	}
 
 	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID+"/students", nil)
-	req = mux.SetURLVars(req, map[string]string{"id": courseID})
+	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String()+"/students", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetCourseStudents(rr, req)

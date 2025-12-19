@@ -20,7 +20,7 @@ func RespondWithError(w http.ResponseWriter, code int, err error, message string
 
 func MapEntityToUserDTO(user *entity.User) dto.UserDTO {
 	return dto.UserDTO{
-		ID:        user.ID,
+		ID:        user.ID.String(),
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
@@ -33,10 +33,10 @@ func MapEntityToUserDTO(user *entity.User) dto.UserDTO {
 
 func MapEntityToCourseDTO(course *entity.Course) dto.CourseDTO {
 	return dto.CourseDTO{
-		ID:              course.ID,
+		ID:              course.ID.String(),
 		Title:           course.Title,
 		Description:     course.Description,
-		InstructorID:    course.InstructorID,
+		InstructorID:    course.InstructorID.String(),
 		DifficultyLevel: string(course.DifficultyLevel),
 		CreatedAt:       course.CreatedAt,
 		UpdatedAt:       course.UpdatedAt,
@@ -45,8 +45,8 @@ func MapEntityToCourseDTO(course *entity.Course) dto.CourseDTO {
 
 func MapEntityToEnrollmentDTO(enrollment *entity.Enrollment) dto.EnrollmentDTO {
 	return dto.EnrollmentDTO{
-		StudentID:      enrollment.StudentID,
-		CourseID:       enrollment.CourseID,
+		StudentID:      enrollment.StudentID.String(),
+		CourseID:       enrollment.CourseID.String(),
 		EnrollmentDate: enrollment.EnrollmentDate,
 		Status:         string(enrollment.Status),
 		CreatedAt:      enrollment.CreatedAt,

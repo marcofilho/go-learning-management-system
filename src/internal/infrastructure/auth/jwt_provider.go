@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/config"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 )
@@ -15,7 +16,7 @@ type TokenProvider interface {
 }
 
 type Claims struct {
-	UserID string          `json:"user_id"`
+	UserID uuid.UUID       `json:"user_id"`
 	Email  string          `json:"email"`
 	Role   entity.UserRole `json:"role"`
 	jwt.RegisteredClaims

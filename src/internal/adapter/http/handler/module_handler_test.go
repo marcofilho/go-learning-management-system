@@ -26,8 +26,8 @@ func TestModuleHandler_CreateModule_Success(t *testing.T) {
 	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
 	handler := NewModuleHandler(moduleUC)
 
-	courseID := uuid.New().String()
-	instructorID := uuid.New().String()
+	courseID := uuid.New()
+	instructorID := uuid.New()
 	course := &entity.Course{ID: courseID, InstructorID: instructorID, Title: "Test Course"}
 
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
@@ -35,8 +35,8 @@ func TestModuleHandler_CreateModule_Success(t *testing.T) {
 
 	reqBody := dto.CreateModuleRequest{Title: "Module 1", OrderIndex: 0}
 	body, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID+"/modules", bytes.NewBuffer(body))
-	req = mux.SetURLVars(req, map[string]string{"courseId": courseID})
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID.String()+"/modules", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"courseId": courseID.String()})
 
 	claims := &auth.Claims{UserID: instructorID, Email: "instructor@example.com", Role: entity.UserRoleInstructor}
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
@@ -57,18 +57,18 @@ func TestModuleHandler_GetCourseModules_Success(t *testing.T) {
 	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
 	handler := NewModuleHandler(moduleUC)
 
-	courseID := uuid.New().String()
+	courseID := uuid.New()
 	course := &entity.Course{ID: courseID, Title: "Test Course"}
 	modules := []*entity.Module{
-		{ID: uuid.New().String(), CourseID: courseID, Title: "Module 1"},
-		{ID: uuid.New().String(), CourseID: courseID, Title: "Module 2"},
+		{ID: uuid.New(), CourseID: courseID, Title: "Module 1"},
+		{ID: uuid.New(), CourseID: courseID, Title: "Module 2"},
 	}
 
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
 	mockModuleRepo.On("GetByCourse", mock.Anything, courseID).Return(modules, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID+"/modules", nil)
-	req = mux.SetURLVars(req, map[string]string{"courseId": courseID})
+	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String()+"/modules", nil)
+	req = mux.SetURLVars(req, map[string]string{"courseId": courseID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetCourseModules(rr, req)
@@ -84,13 +84,13 @@ func TestModuleHandler_GetModule_Success(t *testing.T) {
 	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
 	handler := NewModuleHandler(moduleUC)
 
-	moduleID := uuid.New().String()
-	module := &entity.Module{ID: moduleID, Title: "Module 1", CourseID: uuid.New().String()}
+	moduleID := uuid.New()
+	module := &entity.Module{ID: moduleID, Title: "Module 1", CourseID: uuid.New()}
 
 	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/modules/"+moduleID, nil)
-	req = mux.SetURLVars(req, map[string]string{"id": moduleID})
+	req := httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
 	rr := httptest.NewRecorder()
 
 	handler.GetModule(rr, req)
@@ -106,9 +106,9 @@ func TestModuleHandler_DeleteModule_Success(t *testing.T) {
 	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
 	handler := NewModuleHandler(moduleUC)
 
-	moduleID := uuid.New().String()
-	instructorID := uuid.New().String()
-	courseID := uuid.New().String()
+	moduleID := uuid.New()
+	instructorID := uuid.New()
+	courseID := uuid.New()
 	module := &entity.Module{ID: moduleID, CourseID: courseID, Title: "Module 1"}
 	course := &entity.Course{ID: courseID, InstructorID: instructorID}
 
@@ -116,8 +116,8 @@ func TestModuleHandler_DeleteModule_Success(t *testing.T) {
 	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
 	mockModuleRepo.On("Delete", mock.Anything, moduleID).Return(nil)
 
-	req := httptest.NewRequest(http.MethodDelete, "/modules/"+moduleID, nil)
-	req = mux.SetURLVars(req, map[string]string{"id": moduleID})
+	req := httptest.NewRequest(http.MethodDelete, "/modules/"+moduleID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
 
 	claims := &auth.Claims{UserID: instructorID, Email: "instructor@example.com", Role: entity.UserRoleInstructor}
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
