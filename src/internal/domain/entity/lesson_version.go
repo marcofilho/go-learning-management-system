@@ -12,6 +12,7 @@ import (
 type LessonVersion struct {
 	ID            string         `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	ModuleID      string         `gorm:"type:uuid;not null;index" json:"module_id"`
+	Title         string         `gorm:"not null" json:"title"`
 	VersionNumber int            `gorm:"not null;default:1" json:"version_number"`
 	Content       string         `gorm:"type:text" json:"content"`
 	VideoURL      string         `gorm:"type:varchar(500)" json:"video_url,omitempty"`
@@ -52,4 +53,16 @@ func (l *LessonVersion) BelongsToModule(moduleID string) bool {
 
 func (l *LessonVersion) CanBeModifiedBy(course *Course, userID string) bool {
 	return course.IsOwnedBy(userID)
+}
+
+func NewLessonVersion(title, content, moduleID string, version int) (*LessonVersion, error) {
+	lesson := &LessonVersion{
+		ModuleID:      moduleID,
+		VersionNumber: version,
+		Content:       content,
+	}
+	if err := lesson.Validate(); err != nil {
+		return nil, err
+	}
+	return lesson, nil
 }

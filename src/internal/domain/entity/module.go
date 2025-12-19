@@ -57,3 +57,14 @@ func (m *Module) BelongsToCourse(courseID string) bool {
 func (m *Module) CanBeModifiedBy(course *Course, userID string) bool {
 	return course.IsOwnedBy(userID)
 }
+
+func NewModule(title, courseID string) (*Module, error) {
+	module := &Module{
+		Title:    title,
+		CourseID: courseID,
+	}
+	if err := module.Validate(); err != nil {
+		return nil, err
+	}
+	return module, nil
+}

@@ -38,68 +38,92 @@ func setupTestDB(t *testing.T) (*gorm.DB, *entity.User) {
 	return gormDB, user
 }
 
-func TestPostgresAuditLogRepository(t *testing.T) {
+func TestNewPostgresAuditLogRepository(t *testing.T) {
+	db, _ := setupTestDB(t)
+	repo := repository.NewPostgresAuditLogRepository(db)
+	assert.NotNil(t, repo)
+}
+
+func TestPostgresAuditLogRepository_CreateAndGetByID(t *testing.T) {
 	db, user := setupTestDB(t)
 	repo := repository.NewPostgresAuditLogRepository(db)
 
-	t.Run("Create and GetByID", func(t *testing.T) {
-		t.Parallel()
+	auditLog, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
+	assert.NoError(t, err)
+
+	err = repo.Create(context.Background(), auditLog)
+	assert.NoError(t, err)
+
+	found, err := repo.GetByID(context.Background(), auditLog.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, found)
+	assert.Equal(t, auditLog.ID, found.ID)
+}
+
+func TestPostgresAuditLogRepository_GetByID_NotFound(t *testing.T) {
+	db, _ := setupTestDB(t)
+	repo := repository.NewPostgresAuditLogRepository(db)
+
+	_, err := repo.GetByID(context.Background(), uuid.New().String())
+	assert.Error(t, err)
+	assert.Equal(t, entity.ErrNotFound, err)
+}
+
+func TestPostgresAuditLogRepository_List(t *testing.T) {
+	db, user := setupTestDB(t)
+	repo := repository.NewPostgresAuditLogRepository(db)
+
+	auditLog1, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
+	assert.NoError(t, err)
+	err = repo.Create(context.Background(), auditLog1)
+	assert.NoError(t, err)
+
+	auditLog2, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
+	assert.NoError(t, err)
+	err = repo.Create(context.Background(), auditLog2)
+	assert.NoError(t, err)
+
+	logs, err := repo.List(context.Background(), 10, 0)
+	assert.NoError(t, err)
+	assert.NotNil(t, logs)
+	assert.GreaterOrEqual(t, len(logs), 2)
+}
+
+func TestPostgresAuditLogRepository_List_WithPagination(t *testing.T) {
+	db, user := setupTestDB(t)
+	repo := repository.NewPostgresAuditLogRepository(db)
+
+	// Create 3 audit logs
+	for i := 0; i < 3; i++ {
 		auditLog, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
 		assert.NoError(t, err)
-
 		err = repo.Create(context.Background(), auditLog)
 		assert.NoError(t, err)
+	}
 
-		found, err := repo.GetByID(context.Background(), auditLog.ID)
-		assert.NoError(t, err)
-		assert.NotNil(t, found)
-		assert.Equal(t, auditLog.ID, found.ID)
-	})
+	// Get first page
+	logs, err := repo.List(context.Background(), 2, 0)
+	assert.NoError(t, err)
+	assert.NotNil(t, logs)
+	assert.Len(t, logs, 2)
 
-	t.Run("GetByID not found", func(t *testing.T) {
-		t.Parallel()
-		_, err := repo.GetByID(context.Background(), uuid.New().String())
-		assert.Error(t, err)
-	})
+	// Get second page
+	logs, err = repo.List(context.Background(), 2, 2)
+	assert.NoError(t, err)
+	assert.NotNil(t, logs)
+	assert.GreaterOrEqual(t, len(logs), 1)
+}
 
-	t.Run("List", func(t *testing.T) {
-		t.Parallel()
-		auditLog1, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
-		assert.NoError(t, err)
-		err = repo.Create(context.Background(), auditLog1)
-		assert.NoError(t, err)
+func TestPostgresAuditLogRepository_List_Empty(t *testing.T) {
+	db, _ := setupTestDB(t)
+	repo := repository.NewPostgresAuditLogRepository(db)
 
-		auditLog2, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
-		assert.NoError(t, err)
-		err = repo.Create(context.Background(), auditLog2)
-		assert.NoError(t, err)
+	// Clear any existing logs from setup
+	err := db.Exec("DELETE FROM audit_logs").Error
+	assert.NoError(t, err)
 
-		logs, err := repo.List(context.Background(), 10, 0)
-		assert.NoError(t, err)
-		assert.NotNil(t, logs)
-		assert.GreaterOrEqual(t, len(logs), 2)
-	})
-
-	t.Run("List with pagination", func(t *testing.T) {
-		t.Parallel()
-		// Create 3 audit logs
-		for i := 0; i < 3; i++ {
-			auditLog, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
-			assert.NoError(t, err)
-			err = repo.Create(context.Background(), auditLog)
-			assert.NoError(t, err)
-		}
-
-		// Get first page
-		logs, err := repo.List(context.Background(), 2, 0)
-		assert.NoError(t, err)
-		assert.NotNil(t, logs)
-		assert.Len(t, logs, 2)
-
-		// Get second page
-		logs, err = repo.List(context.Background(), 2, 2)
-		assert.NoError(t, err)
-		assert.NotNil(t, logs)
-		assert.GreaterOrEqual(t, len(logs), 1)
-	})
+	logs, err := repo.List(context.Background(), 10, 0)
+	assert.NoError(t, err)
+	assert.NotNil(t, logs)
+	assert.Len(t, logs, 0)
 }
