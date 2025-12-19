@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/google/uuid"
 	_ "github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto" // Required for Swagger docs
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/usecase"
 )
@@ -73,7 +74,7 @@ func (h *CertificationWebhookHandler) ProcessCertificationWebhook(w http.Respons
 	}
 
 	// Validate payload fields
-	if payload.StudentID == "" || payload.CourseID == "" || payload.CertificationStatus == "" {
+	if payload.StudentID == uuid.Nil || payload.CourseID == uuid.Nil || payload.CertificationStatus == "" {
 		RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Missing required fields"})
 		return
 	}

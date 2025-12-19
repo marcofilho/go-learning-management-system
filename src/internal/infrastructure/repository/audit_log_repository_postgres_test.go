@@ -48,7 +48,7 @@ func TestPostgresAuditLogRepository_CreateAndGetByID(t *testing.T) {
 	db, user := setupTestDB(t)
 	repo := repository.NewPostgresAuditLogRepository(db)
 
-	auditLog, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
+	auditLog, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New(), "course", "{}", "{}", &user.ID)
 	assert.NoError(t, err)
 
 	err = repo.Create(context.Background(), auditLog)
@@ -64,7 +64,7 @@ func TestPostgresAuditLogRepository_GetByID_NotFound(t *testing.T) {
 	db, _ := setupTestDB(t)
 	repo := repository.NewPostgresAuditLogRepository(db)
 
-	_, err := repo.GetByID(context.Background(), uuid.New().String())
+	_, err := repo.GetByID(context.Background(), uuid.New())
 	assert.Error(t, err)
 	assert.Equal(t, entity.ErrNotFound, err)
 }
@@ -73,12 +73,12 @@ func TestPostgresAuditLogRepository_List(t *testing.T) {
 	db, user := setupTestDB(t)
 	repo := repository.NewPostgresAuditLogRepository(db)
 
-	auditLog1, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
+	auditLog1, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New(), "course", "{}", "{}", &user.ID)
 	assert.NoError(t, err)
 	err = repo.Create(context.Background(), auditLog1)
 	assert.NoError(t, err)
 
-	auditLog2, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
+	auditLog2, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New(), "course", "{}", "{}", &user.ID)
 	assert.NoError(t, err)
 	err = repo.Create(context.Background(), auditLog2)
 	assert.NoError(t, err)
@@ -95,7 +95,7 @@ func TestPostgresAuditLogRepository_List_WithPagination(t *testing.T) {
 
 	// Create 3 audit logs
 	for i := 0; i < 3; i++ {
-		auditLog, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New().String(), "course", "{}", "{}", &user.ID)
+		auditLog, err := entity.NewAuditLog(entity.AuditActionCourseCreated, uuid.New(), "course", "{}", "{}", &user.ID)
 		assert.NoError(t, err)
 		err = repo.Create(context.Background(), auditLog)
 		assert.NoError(t, err)

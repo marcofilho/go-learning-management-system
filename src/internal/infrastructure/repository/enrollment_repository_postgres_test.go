@@ -193,7 +193,7 @@ func TestPostgresEnrollmentRepository_GetByStudentAndCourse_NotFound(t *testing.
 	db, _, _ := setupEnrollmentTestDB(t)
 	repo := repository.NewPostgresEnrollmentRepository(db)
 
-	_, err := repo.GetByStudentAndCourse(context.Background(), uuid.New().String(), uuid.New().String())
+	_, err := repo.GetByStudentAndCourse(context.Background(), uuid.New(), uuid.New())
 	assert.Error(t, err)
 	assert.Equal(t, entity.ErrNotFound, err)
 }

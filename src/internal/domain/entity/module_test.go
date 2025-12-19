@@ -8,7 +8,7 @@ import (
 )
 
 func TestModule_Validate(t *testing.T) {
-	validCourseID := uuid.New().String()
+	validCourseID := uuid.New()
 
 	tests := []struct {
 		name    string
@@ -49,7 +49,7 @@ func TestModule_Validate(t *testing.T) {
 			name: "empty course ID",
 			module: &Module{
 				Title:      "Introduction",
-				CourseID:   "",
+				CourseID:   uuid.Nil,
 				OrderIndex: 0,
 			},
 			wantErr: true,
@@ -59,7 +59,7 @@ func TestModule_Validate(t *testing.T) {
 			name: "invalid course UUID",
 			module: &Module{
 				Title:      "Introduction",
-				CourseID:   "not-a-uuid",
+				CourseID:   validCourseID,
 				OrderIndex: 0,
 			},
 			wantErr: true,
@@ -92,14 +92,14 @@ func TestModule_Validate(t *testing.T) {
 }
 
 func TestModule_BelongsToCourse(t *testing.T) {
-	courseID := uuid.New().String()
+	courseID := uuid.New()
 	module := &Module{
 		CourseID: courseID,
 		Title:    "Test Module",
 	}
 
 	assert.True(t, module.BelongsToCourse(courseID))
-	assert.False(t, module.BelongsToCourse(uuid.New().String()))
+	assert.False(t, module.BelongsToCourse(uuid.New()))
 }
 
 func TestModule_CanBeModifiedBy(t *testing.T) {
@@ -107,7 +107,7 @@ func TestModule_CanBeModifiedBy(t *testing.T) {
 	otherInstructor, _ := NewUser("other@example.com", "password123", "Other", "Instructor", UserRoleInstructor)
 
 	course := &Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 	"gorm.io/gorm"
@@ -20,7 +21,7 @@ func (r *PostgresUserRepository) Create(ctx context.Context, user *entity.User) 
 	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *PostgresUserRepository) GetByID(ctx context.Context, id string) (*entity.User, error) {
+func (r *PostgresUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	var user entity.User
 	if err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -46,7 +47,7 @@ func (r *PostgresUserRepository) Update(ctx context.Context, user *entity.User) 
 	return r.db.WithContext(ctx).Save(user).Error
 }
 
-func (r *PostgresUserRepository) Delete(ctx context.Context, id string) error {
+func (r *PostgresUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&entity.User{}, "id = ?", id).Error
 }
 

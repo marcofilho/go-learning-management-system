@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 	"gorm.io/gorm"
@@ -20,7 +21,7 @@ func (r *PostgresCourseRepository) Create(ctx context.Context, course *entity.Co
 	return r.db.WithContext(ctx).Create(course).Error
 }
 
-func (r *PostgresCourseRepository) GetByID(ctx context.Context, id string) (*entity.Course, error) {
+func (r *PostgresCourseRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.Course, error) {
 	var course entity.Course
 	if err := r.db.WithContext(ctx).First(&course, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -35,7 +36,7 @@ func (r *PostgresCourseRepository) Update(ctx context.Context, course *entity.Co
 	return r.db.WithContext(ctx).Save(course).Error
 }
 
-func (r *PostgresCourseRepository) Delete(ctx context.Context, id string) error {
+func (r *PostgresCourseRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&entity.Course{}, "id = ?", id).Error
 }
 
@@ -70,7 +71,7 @@ func (r *PostgresCourseRepository) List(ctx context.Context, filter *repository.
 	return courses, nil
 }
 
-func (r *PostgresCourseRepository) GetByInstructor(ctx context.Context, instructorID string) ([]*entity.Course, error) {
+func (r *PostgresCourseRepository) GetByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error) {
 	var courses []*entity.Course
 	if err := r.db.WithContext(ctx).
 		Where("instructor_id = ?", instructorID).

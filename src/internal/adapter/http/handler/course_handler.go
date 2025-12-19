@@ -271,7 +271,7 @@ func (h *CourseHandler) DeleteCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.courseUseCase.DeleteCourse(r.Context(), courseID.String(), userID.String()); err != nil {
+	if err := h.courseUseCase.DeleteCourse(r.Context(), courseID, userID); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}

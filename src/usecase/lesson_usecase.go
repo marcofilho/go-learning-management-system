@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 )
@@ -24,7 +25,7 @@ func NewLessonUseCase(lessonRepo repository.LessonRepository, moduleRepo reposit
 	}
 }
 
-func (uc *LessonUseCase) CreateLesson(ctx context.Context, lesson *entity.LessonVersion, instructorID string) error {
+func (uc *LessonUseCase) CreateLesson(ctx context.Context, lesson *entity.LessonVersion, instructorID uuid.UUID) error {
 	module, err := uc.moduleRepo.GetByID(ctx, lesson.ModuleID)
 	if err != nil {
 		return err
@@ -57,7 +58,7 @@ func (uc *LessonUseCase) CreateLesson(ctx context.Context, lesson *entity.Lesson
 	return nil
 }
 
-func (uc *LessonUseCase) CreateLessonVersion(ctx context.Context, lessonID string, newVersion *entity.LessonVersion, instructorID string) error {
+func (uc *LessonUseCase) CreateLessonVersion(ctx context.Context, lessonID uuid.UUID, newVersion *entity.LessonVersion, instructorID uuid.UUID) error {
 	existingLesson, err := uc.lessonRepo.GetByID(ctx, lessonID)
 	if err != nil {
 		return err
@@ -102,7 +103,7 @@ func (uc *LessonUseCase) CreateLessonVersion(ctx context.Context, lessonID strin
 	return nil
 }
 
-func (uc *LessonUseCase) GetLatestLessonsByModule(ctx context.Context, moduleID string) ([]*entity.LessonVersion, error) {
+func (uc *LessonUseCase) GetLatestLessonsByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
 	if _, err := uc.moduleRepo.GetByID(ctx, moduleID); err != nil {
 		return nil, err
 	}
@@ -110,15 +111,15 @@ func (uc *LessonUseCase) GetLatestLessonsByModule(ctx context.Context, moduleID 
 	return uc.lessonRepo.GetLatestByModule(ctx, moduleID)
 }
 
-func (uc *LessonUseCase) GetAllLessonVersions(ctx context.Context, lessonID string) ([]*entity.LessonVersion, error) {
+func (uc *LessonUseCase) GetAllLessonVersions(ctx context.Context, lessonID uuid.UUID) ([]*entity.LessonVersion, error) {
 	return uc.lessonRepo.GetAllVersions(ctx, lessonID)
 }
 
-func (uc *LessonUseCase) GetLesson(ctx context.Context, id string) (*entity.LessonVersion, error) {
+func (uc *LessonUseCase) GetLesson(ctx context.Context, id uuid.UUID) (*entity.LessonVersion, error) {
 	return uc.lessonRepo.GetByID(ctx, id)
 }
 
-func (uc *LessonUseCase) DeleteLesson(ctx context.Context, id string, instructorID string) error {
+func (uc *LessonUseCase) DeleteLesson(ctx context.Context, id uuid.UUID, instructorID uuid.UUID) error {
 	lesson, err := uc.lessonRepo.GetByID(ctx, id)
 	if err != nil {
 		return err

@@ -19,10 +19,10 @@ func TestNewCourse(t *testing.T) {
 func TestCourse_CanBeModifiedBy(t *testing.T) {
 	instructor, _ := NewUser("instructor@example.com", "password123", "I", "T", UserRoleInstructor)
 	admin, _ := NewUser("admin@example.com", "password123", "A", "D", UserRoleAdmin)
-	course := &Course{ID: uuid.New().String(), InstructorID: instructor.ID}
+	course := &Course{ID: uuid.New(), InstructorID: instructor.ID}
 
-	assert.True(t, course.CanBeModifiedBy(instructor))
-	assert.True(t, course.CanBeModifiedBy(admin))
+	assert.True(t, course.CanBeModifiedBy(instructor.ID, instructor.Role))
+	assert.True(t, course.CanBeModifiedBy(admin.ID, admin.Role))
 }
 
 func TestNewCourse_Validation(t *testing.T) {
@@ -71,7 +71,7 @@ func TestCourse_Validate(t *testing.T) {
 			course: &Course{
 				Title:        "Title",
 				Description:  "Description",
-				InstructorID: "",
+				InstructorID: uuid.Nil,
 			},
 			wantErr: true,
 		},
@@ -80,7 +80,7 @@ func TestCourse_Validate(t *testing.T) {
 			course: &Course{
 				Title:        "Title",
 				Description:  "Description",
-				InstructorID: "invalid-uuid",
+				InstructorID: uuid.Nil,
 			},
 			wantErr: true,
 		},

@@ -15,7 +15,7 @@ import (
 func TestCertificationWebhookUseCase_ProcessCertification_Passed(t *testing.T) {
 	student, _ := entity.NewUser("student@example.com", "password123", "John", "Student", entity.UserRoleStudent)
 	course := &entity.Course{
-		ID:    uuid.New().String(),
+		ID:    uuid.New(),
 		Title: "Test Course",
 	}
 	enrollment := &entity.Enrollment{
@@ -57,7 +57,7 @@ func TestCertificationWebhookUseCase_ProcessCertification_Passed(t *testing.T) {
 func TestCertificationWebhookUseCase_ProcessCertification_Failed(t *testing.T) {
 	student, _ := entity.NewUser("student@example.com", "password123", "John", "Student", entity.UserRoleStudent)
 	course := &entity.Course{
-		ID:    uuid.New().String(),
+		ID:    uuid.New(),
 		Title: "Test Course",
 	}
 	enrollment := &entity.Enrollment{
@@ -100,12 +100,13 @@ func TestCertificationWebhookUseCase_ProcessCertification_StudentNotFound(t *tes
 	mockEnrollmentRepo := new(MockEnrollmentRepository)
 	mockAuditRepo := new(MockAuditLogRepository)
 
-	mockUserRepo.On("GetByID", mock.Anything, "invalid-id").Return(nil, entity.ErrNotFound)
+	invalidID := uuid.New()
+	mockUserRepo.On("GetByID", mock.Anything, invalidID).Return(nil, entity.ErrNotFound)
 
 	uc := NewCertificationWebhookUseCase(mockUserRepo, mockCourseRepo, mockEnrollmentRepo, mockAuditRepo)
 	payload := CertificationWebhookPayload{
-		StudentID:           "invalid-id",
-		CourseID:            "course-id",
+		StudentID:           invalidID,
+		CourseID:            uuid.New(),
 		CertificationStatus: "passed",
 		Score:               95,
 		Timestamp:           time.Now(),
@@ -120,7 +121,7 @@ func TestCertificationWebhookUseCase_ProcessCertification_StudentNotFound(t *tes
 func TestCertificationWebhookUseCase_ProcessCertification_InactiveEnrollment(t *testing.T) {
 	student, _ := entity.NewUser("student@example.com", "password123", "John", "Student", entity.UserRoleStudent)
 	course := &entity.Course{
-		ID:    uuid.New().String(),
+		ID:    uuid.New(),
 		Title: "Test Course",
 	}
 	enrollment := &entity.Enrollment{

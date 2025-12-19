@@ -138,7 +138,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, err, "Invalid user ID format")
 		return
 	}
-	user, err := h.userUseCase.GetUserByID(r.Context(), id.String())
+	user, err := h.userUseCase.GetUserByID(r.Context(), id)
 	if err != nil {
 		RespondWithError(w, http.StatusNotFound, err, "User not found")
 		return
@@ -217,7 +217,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "Insufficient permissions")
 		return
 	}
-	user, err := h.userUseCase.GetUserByID(r.Context(), id.String())
+	user, err := h.userUseCase.GetUserByID(r.Context(), id)
 	if err != nil {
 		RespondWithError(w, http.StatusNotFound, err, "User not found")
 		return
@@ -267,7 +267,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, err, "Invalid user ID format")
 		return
 	}
-	if err := h.userUseCase.DeleteUser(r.Context(), id.String()); err != nil {
+	if err := h.userUseCase.DeleteUser(r.Context(), id); err != nil {
 		RespondWithError(w, http.StatusInternalServerError, err, "Failed to delete user")
 		return
 	}

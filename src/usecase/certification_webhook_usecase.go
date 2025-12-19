@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 )
@@ -31,8 +32,8 @@ func NewCertificationWebhookUseCase(
 }
 
 type CertificationWebhookPayload struct {
-	StudentID           string    `json:"student_id"`
-	CourseID            string    `json:"course_id"`
+	StudentID           uuid.UUID `json:"student_id"`
+	CourseID            uuid.UUID `json:"course_id"`
 	CertificationStatus string    `json:"certification_status"`
 	Score               int       `json:"score"`
 	Timestamp           time.Time `json:"timestamp"`

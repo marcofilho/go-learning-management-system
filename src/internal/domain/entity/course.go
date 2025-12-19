@@ -27,7 +27,7 @@ type Course struct {
 	UpdatedAt       time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt       gorm.DeletedAt  `gorm:"index" json:"-"`
 
-	Instructor User     `gorm:"foreignKey:InstructorID;constraint:OnDelete:CASCADE" json:"-"`
+	Instructor *User    `gorm:"foreignKey:InstructorID;constraint:OnDelete:CASCADE" json:"-"`
 	Modules    []Module `gorm:"foreignKey:CourseID" json:"modules,omitempty"`
 }
 

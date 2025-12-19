@@ -60,7 +60,7 @@ func (h *ModuleHandler) CreateModule(w http.ResponseWriter, r *http.Request) {
 		OrderIndex: req.OrderIndex,
 	}
 
-	if err := h.moduleUseCase.CreateModule(r.Context(), module, userID.String()); err != nil {
+	if err := h.moduleUseCase.CreateModule(r.Context(), module, userID); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
@@ -97,7 +97,7 @@ func (h *ModuleHandler) GetCourseModules(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	modules, err := h.moduleUseCase.GetModulesByCourse(r.Context(), courseID.String())
+	modules, err := h.moduleUseCase.GetModulesByCourse(r.Context(), courseID)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -138,7 +138,7 @@ func (h *ModuleHandler) GetModule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID.String())
+	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -191,7 +191,7 @@ func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID.String())
+	module, err := h.moduleUseCase.GetModule(r.Context(), moduleID)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -204,7 +204,7 @@ func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
 		module.OrderIndex = req.OrderIndex
 	}
 
-	if err := h.moduleUseCase.UpdateModule(r.Context(), module, userID.String()); err != nil {
+	if err := h.moduleUseCase.UpdateModule(r.Context(), module, userID); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
@@ -248,7 +248,7 @@ func (h *ModuleHandler) DeleteModule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.moduleUseCase.DeleteModule(r.Context(), moduleID.String(), userID.String()); err != nil {
+	if err := h.moduleUseCase.DeleteModule(r.Context(), moduleID, userID); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}

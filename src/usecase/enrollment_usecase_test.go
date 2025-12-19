@@ -15,15 +15,15 @@ func TestEnrollmentUseCase_EnrollStudent(t *testing.T) {
 	student, _ := entity.NewUser("student@example.com", "password123", "John", "Student", entity.UserRoleStudent)
 	admin, _ := entity.NewUser("admin@example.com", "password123", "Admin", "User", entity.UserRoleAdmin)
 	course := &entity.Course{
-		ID:    uuid.New().String(),
+		ID:    uuid.New(),
 		Title: "Test Course",
 	}
 
 	tests := []struct {
 		name        string
-		studentID   string
-		courseID    string
-		requestorID string
+		studentID   uuid.UUID
+		courseID    uuid.UUID
+		requestorID uuid.UUID
 		setupMocks  func(*MockEnrollmentRepository, *MockCourseRepository, *MockUserRepository, *MockAuditLogRepository)
 		wantErr     bool
 	}{
@@ -59,10 +59,10 @@ func TestEnrollmentUseCase_EnrollStudent(t *testing.T) {
 		{
 			name:        "course not found",
 			studentID:   student.ID,
-			courseID:    "invalid-course",
+			courseID:    uuid.New(),
 			requestorID: student.ID,
 			setupMocks: func(enrollRepo *MockEnrollmentRepository, courseRepo *MockCourseRepository, userRepo *MockUserRepository, auditRepo *MockAuditLogRepository) {
-				courseRepo.On("GetByID", mock.Anything, "invalid-course").Return(nil, entity.ErrNotFound)
+				courseRepo.On("GetByID", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(nil, entity.ErrNotFound)
 			},
 			wantErr: true,
 		},
@@ -98,11 +98,11 @@ func TestEnrollmentUseCase_EnrollStudent(t *testing.T) {
 }
 
 func TestEnrollmentUseCase_GetStudentCourses(t *testing.T) {
-	studentID := uuid.New().String()
+	studentID := uuid.New()
 	student, _ := entity.NewUser("student@example.com", "password123", "John", "Student", entity.UserRoleStudent)
 	enrollments := []*entity.Enrollment{
-		{StudentID: student.ID, CourseID: "course-1"},
-		{StudentID: student.ID, CourseID: "course-2"},
+		{StudentID: student.ID, CourseID: uuid.New()},
+		{StudentID: student.ID, CourseID: uuid.New()},
 	}
 
 	mockEnrollRepo := new(MockEnrollmentRepository)
@@ -121,10 +121,10 @@ func TestEnrollmentUseCase_GetStudentCourses(t *testing.T) {
 }
 
 func TestEnrollmentUseCase_GetCourseStudents(t *testing.T) {
-	courseID := uuid.New().String()
+	courseID := uuid.New()
 	enrollments := []*entity.Enrollment{
-		{StudentID: "student-1", CourseID: courseID},
-		{StudentID: "student-2", CourseID: courseID},
+		{StudentID: uuid.New(), CourseID: courseID},
+		{StudentID: uuid.New(), CourseID: courseID},
 	}
 
 	mockEnrollRepo := new(MockEnrollmentRepository)
@@ -147,7 +147,7 @@ func TestEnrollmentUseCase_UpdateEnrollmentStatus(t *testing.T) {
 	student, _ := entity.NewUser("student@example.com", "password123", "Student", "User", entity.UserRoleStudent)
 	enrollment := &entity.Enrollment{
 		StudentID: student.ID,
-		CourseID:  uuid.New().String(),
+		CourseID:  uuid.New(),
 		Status:    entity.EnrollmentStatusActive,
 	}
 
@@ -176,7 +176,7 @@ func TestEnrollmentUseCase_DropEnrollment(t *testing.T) {
 	student, _ := entity.NewUser("student@example.com", "password123", "Student", "User", entity.UserRoleStudent)
 	enrollment := &entity.Enrollment{
 		StudentID: student.ID,
-		CourseID:  uuid.New().String(),
+		CourseID:  uuid.New(),
 		Status:    entity.EnrollmentStatusActive,
 	}
 
@@ -205,7 +205,7 @@ func TestEnrollmentUseCase_CompleteEnrollment(t *testing.T) {
 	student, _ := entity.NewUser("student@example.com", "password123", "Student", "User", entity.UserRoleStudent)
 	enrollment := &entity.Enrollment{
 		StudentID: student.ID,
-		CourseID:  uuid.New().String(),
+		CourseID:  uuid.New(),
 		Status:    entity.EnrollmentStatusActive,
 	}
 

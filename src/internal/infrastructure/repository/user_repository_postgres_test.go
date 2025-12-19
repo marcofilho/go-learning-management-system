@@ -135,7 +135,7 @@ func TestPostgresUserRepository_Get_NotFound(t *testing.T) {
 	repo := repository.NewPostgresUserRepository(db)
 
 	t.Run("GetByID", func(t *testing.T) {
-		_, err := repo.GetByID(context.Background(), uuid.New().String())
+		_, err := repo.GetByID(context.Background(), uuid.New())
 		assert.Error(t, err)
 		assert.Equal(t, entity.ErrNotFound, err)
 	})

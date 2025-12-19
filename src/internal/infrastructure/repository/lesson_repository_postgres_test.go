@@ -165,7 +165,7 @@ func TestPostgresLessonRepository_GetByID_NotFound(t *testing.T) {
 	db, _ := setupLessonTestDB(t)
 	repo := repository.NewPostgresLessonRepository(db)
 
-	_, err := repo.GetByID(context.Background(), uuid.New().String())
+	_, err := repo.GetByID(context.Background(), uuid.New())
 	assert.Error(t, err)
 	assert.Equal(t, entity.ErrNotFound, err)
 }
@@ -174,7 +174,7 @@ func TestPostgresLessonRepository_Delete_NotFound(t *testing.T) {
 	db, _ := setupLessonTestDB(t)
 	repo := repository.NewPostgresLessonRepository(db)
 
-	err := repo.Delete(context.Background(), uuid.New().String())
+	err := repo.Delete(context.Background(), uuid.New())
 	assert.NoError(t, err)
 }
 
@@ -182,7 +182,7 @@ func TestPostgresLessonRepository_GetByModule_Empty(t *testing.T) {
 	db, _ := setupLessonTestDB(t)
 	repo := repository.NewPostgresLessonRepository(db)
 
-	lessons, err := repo.GetByModule(context.Background(), uuid.New().String())
+	lessons, err := repo.GetByModule(context.Background(), uuid.New())
 	assert.NoError(t, err)
 	assert.Len(t, lessons, 0)
 }
@@ -191,7 +191,7 @@ func TestPostgresLessonRepository_GetNextVersionNumber_Empty(t *testing.T) {
 	db, _ := setupLessonTestDB(t)
 	repo := repository.NewPostgresLessonRepository(db)
 
-	nextVersion, err := repo.GetNextVersionNumber(context.Background(), uuid.New().String())
+	nextVersion, err := repo.GetNextVersionNumber(context.Background(), uuid.New())
 	assert.NoError(t, err)
 	assert.Equal(t, 1, nextVersion)
 }

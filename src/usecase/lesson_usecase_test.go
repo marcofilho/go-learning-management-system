@@ -20,7 +20,7 @@ func (m *MockLessonRepository) Create(ctx context.Context, lesson *entity.Lesson
 	return args.Error(0)
 }
 
-func (m *MockLessonRepository) GetByID(ctx context.Context, id string) (*entity.LessonVersion, error) {
+func (m *MockLessonRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.LessonVersion, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -28,7 +28,7 @@ func (m *MockLessonRepository) GetByID(ctx context.Context, id string) (*entity.
 	return args.Get(0).(*entity.LessonVersion), args.Error(1)
 }
 
-func (m *MockLessonRepository) GetByModule(ctx context.Context, moduleID string) ([]*entity.LessonVersion, error) {
+func (m *MockLessonRepository) GetByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
 	args := m.Called(ctx, moduleID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -36,7 +36,7 @@ func (m *MockLessonRepository) GetByModule(ctx context.Context, moduleID string)
 	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
 }
 
-func (m *MockLessonRepository) GetLatestByModule(ctx context.Context, moduleID string) ([]*entity.LessonVersion, error) {
+func (m *MockLessonRepository) GetLatestByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
 	args := m.Called(ctx, moduleID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -44,12 +44,12 @@ func (m *MockLessonRepository) GetLatestByModule(ctx context.Context, moduleID s
 	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
 }
 
-func (m *MockLessonRepository) GetNextVersionNumber(ctx context.Context, moduleID string) (int, error) {
+func (m *MockLessonRepository) GetNextVersionNumber(ctx context.Context, moduleID uuid.UUID) (int, error) {
 	args := m.Called(ctx, moduleID)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockLessonRepository) GetAllVersions(ctx context.Context, lessonID string) ([]*entity.LessonVersion, error) {
+func (m *MockLessonRepository) GetAllVersions(ctx context.Context, lessonID uuid.UUID) ([]*entity.LessonVersion, error) {
 	args := m.Called(ctx, lessonID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -57,7 +57,7 @@ func (m *MockLessonRepository) GetAllVersions(ctx context.Context, lessonID stri
 	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
 }
 
-func (m *MockLessonRepository) Delete(ctx context.Context, id string) error {
+func (m *MockLessonRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -65,12 +65,12 @@ func (m *MockLessonRepository) Delete(ctx context.Context, id string) error {
 func TestLessonUseCase_CreateLesson(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	course := &entity.Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}
 	module := &entity.Module{
-		ID:       uuid.New().String(),
+		ID:       uuid.New(),
 		CourseID: course.ID,
 		Title:    "Module 1",
 	}
@@ -103,17 +103,17 @@ func TestLessonUseCase_CreateLesson(t *testing.T) {
 func TestLessonUseCase_CreateLessonVersion(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	course := &entity.Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}
 	module := &entity.Module{
-		ID:       uuid.New().String(),
+		ID:       uuid.New(),
 		CourseID: course.ID,
 		Title:    "Module 1",
 	}
 	lesson := &entity.LessonVersion{
-		ID:            uuid.New().String(),
+		ID:            uuid.New(),
 		ModuleID:      module.ID,
 		VersionNumber: 1,
 		Content:       "Old Content",
@@ -147,10 +147,10 @@ func TestLessonUseCase_CreateLessonVersion(t *testing.T) {
 }
 
 func TestLessonUseCase_GetLatestLessonsByModule(t *testing.T) {
-	moduleID := uuid.New().String()
+	moduleID := uuid.New()
 	lessons := []*entity.LessonVersion{
-		{ID: "1", ModuleID: moduleID, Content: "Lesson 1", VersionNumber: 1},
-		{ID: "2", ModuleID: moduleID, Content: "Lesson 2", VersionNumber: 1},
+		{ID: uuid.New(), ModuleID: moduleID, Content: "Lesson 1", VersionNumber: 1},
+		{ID: uuid.New(), ModuleID: moduleID, Content: "Lesson 2", VersionNumber: 1},
 	}
 
 	mockLessonRepo := new(MockLessonRepository)
@@ -171,7 +171,7 @@ func TestLessonUseCase_GetLatestLessonsByModule(t *testing.T) {
 }
 
 func TestLessonUseCase_GetAllLessonVersions(t *testing.T) {
-	lessonID := uuid.New().String()
+	lessonID := uuid.New()
 	versions := []*entity.LessonVersion{
 		{ID: lessonID, VersionNumber: 1},
 		{ID: lessonID, VersionNumber: 2},
@@ -194,7 +194,7 @@ func TestLessonUseCase_GetAllLessonVersions(t *testing.T) {
 }
 
 func TestLessonUseCase_GetLesson(t *testing.T) {
-	lessonID := uuid.New().String()
+	lessonID := uuid.New()
 	lesson := &entity.LessonVersion{ID: lessonID, VersionNumber: 1}
 
 	mockLessonRepo := new(MockLessonRepository)
@@ -216,17 +216,17 @@ func TestLessonUseCase_GetLesson(t *testing.T) {
 func TestLessonUseCase_DeleteLesson(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	course := &entity.Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}
 	module := &entity.Module{
-		ID:       uuid.New().String(),
+		ID:       uuid.New(),
 		CourseID: course.ID,
 		Title:    "Module 1",
 	}
 	lesson := &entity.LessonVersion{
-		ID:       uuid.New().String(),
+		ID:       uuid.New(),
 		ModuleID: module.ID,
 	}
 

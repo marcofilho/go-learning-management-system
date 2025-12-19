@@ -20,7 +20,7 @@ func (m *MockModuleRepository) Create(ctx context.Context, module *entity.Module
 	return args.Error(0)
 }
 
-func (m *MockModuleRepository) GetByID(ctx context.Context, id string) (*entity.Module, error) {
+func (m *MockModuleRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.Module, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -28,7 +28,7 @@ func (m *MockModuleRepository) GetByID(ctx context.Context, id string) (*entity.
 	return args.Get(0).(*entity.Module), args.Error(1)
 }
 
-func (m *MockModuleRepository) GetByCourse(ctx context.Context, courseID string) ([]*entity.Module, error) {
+func (m *MockModuleRepository) GetByCourse(ctx context.Context, courseID uuid.UUID) ([]*entity.Module, error) {
 	args := m.Called(ctx, courseID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -41,7 +41,7 @@ func (m *MockModuleRepository) Update(ctx context.Context, module *entity.Module
 	return args.Error(0)
 }
 
-func (m *MockModuleRepository) Delete(ctx context.Context, id string) error {
+func (m *MockModuleRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -49,7 +49,7 @@ func (m *MockModuleRepository) Delete(ctx context.Context, id string) error {
 func TestModuleUseCase_CreateModule(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	course := &entity.Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}
@@ -74,10 +74,10 @@ func TestModuleUseCase_CreateModule(t *testing.T) {
 }
 
 func TestModuleUseCase_GetModulesByCourse(t *testing.T) {
-	courseID := uuid.New().String()
+	courseID := uuid.New()
 	modules := []*entity.Module{
-		{ID: "1", CourseID: courseID, Title: "Module 1"},
-		{ID: "2", CourseID: courseID, Title: "Module 2"},
+		{ID: uuid.New(), CourseID: courseID, Title: "Module 1"},
+		{ID: uuid.New(), CourseID: courseID, Title: "Module 2"},
 	}
 
 	mockModuleRepo := new(MockModuleRepository)
@@ -95,7 +95,7 @@ func TestModuleUseCase_GetModulesByCourse(t *testing.T) {
 }
 
 func TestModuleUseCase_GetModule(t *testing.T) {
-	moduleID := uuid.New().String()
+	moduleID := uuid.New()
 	module := &entity.Module{ID: moduleID, Title: "Module 1"}
 
 	mockModuleRepo := new(MockModuleRepository)
@@ -114,12 +114,12 @@ func TestModuleUseCase_GetModule(t *testing.T) {
 func TestModuleUseCase_UpdateModule(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	course := &entity.Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}
 	module := &entity.Module{
-		ID:       uuid.New().String(),
+		ID:       uuid.New(),
 		CourseID: course.ID,
 		Title:    "Old Title",
 	}
@@ -147,12 +147,12 @@ func TestModuleUseCase_UpdateModule(t *testing.T) {
 func TestModuleUseCase_DeleteModule(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	course := &entity.Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}
 	module := &entity.Module{
-		ID:       uuid.New().String(),
+		ID:       uuid.New(),
 		CourseID: course.ID,
 	}
 

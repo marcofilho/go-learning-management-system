@@ -9,25 +9,25 @@ import (
 )
 
 func TestNewAuditLog(t *testing.T) {
-	resourceID := uuid.New().String()
-	userID := uuid.New().String()
+	entityID := uuid.New()
+	userID := uuid.New()
 
 	tests := []struct {
 		name          string
 		action        AuditAction
-		resourceID    string
-		resourceType  string
+		entityID      uuid.UUID
+		entityType    string
 		payloadBefore string
 		payloadAfter  string
-		userID        *string
+		userID        *uuid.UUID
 		wantErr       bool
 		errMsg        string
 	}{
 		{
 			name:          "valid audit log",
 			action:        AuditActionCourseCreated,
-			resourceID:    resourceID,
-			resourceType:  "course",
+			entityID:      entityID,
+			entityType:    "course",
 			payloadBefore: "",
 			payloadAfter:  `{"title":"Course"}`,
 			userID:        &userID,
@@ -36,8 +36,8 @@ func TestNewAuditLog(t *testing.T) {
 		{
 			name:          "valid without user ID",
 			action:        AuditActionCertificationWebhook,
-			resourceID:    resourceID,
-			resourceType:  "certification",
+			entityID:      entityID,
+			entityType:    "certification",
 			payloadBefore: "",
 			payloadAfter:  `{"status":"completed"}`,
 			userID:        nil,
@@ -46,8 +46,8 @@ func TestNewAuditLog(t *testing.T) {
 		{
 			name:          "empty action",
 			action:        AuditAction(""),
-			resourceID:    resourceID,
-			resourceType:  "course",
+			entityID:      entityID,
+			entityType:    "course",
 			payloadBefore: "",
 			payloadAfter:  `{}`,
 			userID:        &userID,
@@ -57,44 +57,44 @@ func TestNewAuditLog(t *testing.T) {
 		{
 			name:          "empty resource ID",
 			action:        AuditActionCourseCreated,
-			resourceID:    "",
-			resourceType:  "course",
+			entityID:      uuid.Nil,
+			entityType:    "course",
 			payloadBefore: "",
 			payloadAfter:  `{}`,
 			userID:        &userID,
 			wantErr:       true,
-			errMsg:        "resource_id is required",
+			errMsg:        "entity_id is required",
 		},
 		{
 			name:          "invalid resource UUID",
 			action:        AuditActionCourseCreated,
-			resourceID:    "not-a-uuid",
-			resourceType:  "course",
+			entityID:      entityID,
+			entityType:    "course",
 			payloadBefore: "",
 			payloadAfter:  `{}`,
 			userID:        &userID,
 			wantErr:       true,
-			errMsg:        "must be a valid UUID",
+			errMsg:        "action is required",
 		},
 		{
 			name:          "empty resource type",
 			action:        AuditActionCourseCreated,
-			resourceID:    resourceID,
-			resourceType:  "",
+			entityID:      entityID,
+			entityType:    "",
 			payloadBefore: "",
 			payloadAfter:  `{}`,
 			userID:        &userID,
 			wantErr:       true,
-			errMsg:        "resource_type is required",
+			errMsg:        "entity_type is required",
 		},
 		{
 			name:          "invalid user UUID",
 			action:        AuditActionCourseCreated,
-			resourceID:    resourceID,
-			resourceType:  "course",
+			entityID:      entityID,
+			entityType:    "course",
 			payloadBefore: "",
 			payloadAfter:  `{}`,
-			userID:        stringPtr("not-a-uuid"),
+			userID:        nil,
 			wantErr:       true,
 			errMsg:        "must be a valid UUID",
 		},
@@ -102,7 +102,7 @@ func TestNewAuditLog(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			log, err := NewAuditLog(tt.action, tt.resourceID, tt.resourceType, tt.payloadBefore, tt.payloadAfter, tt.userID)
+			log, err := NewAuditLog(tt.action, tt.entityID, tt.entityType, tt.payloadBefore, tt.payloadAfter, tt.userID)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -113,15 +113,15 @@ func TestNewAuditLog(t *testing.T) {
 				require.NotNil(t, log)
 				assert.NotEmpty(t, log.ID)
 				assert.Equal(t, tt.action, log.Action)
-				assert.Equal(t, tt.resourceID, log.ResourceID)
-				assert.Equal(t, tt.resourceType, log.ResourceType)
+				assert.Equal(t, tt.entityID, log.EntityID)
+				assert.Equal(t, tt.entityType, log.EntityType)
 			}
 		})
 	}
 }
 
 func TestAuditLog_Validate(t *testing.T) {
-	validUUID := uuid.New().String()
+	validUUID := uuid.New()
 
 	tests := []struct {
 		name    string
@@ -132,18 +132,18 @@ func TestAuditLog_Validate(t *testing.T) {
 		{
 			name: "valid audit log",
 			log: &AuditLog{
-				Action:       AuditActionCourseCreated,
-				ResourceID:   validUUID,
-				ResourceType: "course",
+				Action:     AuditActionCourseCreated,
+				EntityID:   validUUID,
+				EntityType: "course",
 			},
 			wantErr: false,
 		},
 		{
 			name: "empty action",
 			log: &AuditLog{
-				Action:       AuditAction(""),
-				ResourceID:   validUUID,
-				ResourceType: "course",
+				Action:     AuditAction(""),
+				EntityID:   validUUID,
+				EntityType: "course",
 			},
 			wantErr: true,
 			errMsg:  "action is required",

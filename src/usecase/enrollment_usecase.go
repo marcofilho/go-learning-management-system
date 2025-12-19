@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 )
@@ -25,7 +26,7 @@ func NewEnrollmentUseCase(enrollmentRepo repository.EnrollmentRepository, course
 	}
 }
 
-func (uc *EnrollmentUseCase) EnrollStudent(ctx context.Context, studentID, courseID, requestorID string) (*entity.Enrollment, error) {
+func (uc *EnrollmentUseCase) EnrollStudent(ctx context.Context, studentID, courseID, requestorID uuid.UUID) (*entity.Enrollment, error) {
 	if _, err := uc.courseRepo.GetByID(ctx, courseID); err != nil {
 		return nil, err
 	}
@@ -59,23 +60,22 @@ func (uc *EnrollmentUseCase) EnrollStudent(ctx context.Context, studentID, cours
 	}
 
 	// Create audit log
-	resourceID := fmt.Sprintf("%s-%s", studentID, courseID)
 	payloadAfter := fmt.Sprintf(`{"student_id":"%s","course_id":"%s","status":"%s"}`, studentID, courseID, enrollment.Status)
-	auditLog, _ := entity.NewAuditLog(entity.AuditActionEnrollmentCreated, resourceID, "enrollment", "", payloadAfter, &requestorID)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionEnrollmentCreated, courseID, "enrollment", "", payloadAfter, &requestorID)
 	uc.auditLogRepo.Create(ctx, auditLog)
 
 	return enrollment, nil
 }
 
-func (uc *EnrollmentUseCase) GetStudentCourses(ctx context.Context, studentID string, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (uc *EnrollmentUseCase) GetStudentCourses(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
 	return uc.enrollmentRepo.GetByStudent(ctx, studentID, filter)
 }
 
-func (uc *EnrollmentUseCase) GetCourseStudents(ctx context.Context, courseID string, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (uc *EnrollmentUseCase) GetCourseStudents(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
 	return uc.enrollmentRepo.GetByCourse(ctx, courseID, filter)
 }
 
-func (uc *EnrollmentUseCase) UpdateEnrollmentStatus(ctx context.Context, studentID, courseID string, status entity.EnrollmentStatus, userID string) error {
+func (uc *EnrollmentUseCase) UpdateEnrollmentStatus(ctx context.Context, studentID, courseID uuid.UUID, status entity.EnrollmentStatus, userID uuid.UUID) error {
 	enrollment, err := uc.enrollmentRepo.GetByStudentAndCourse(ctx, studentID, courseID)
 	if err != nil {
 		return err
@@ -99,19 +99,18 @@ func (uc *EnrollmentUseCase) UpdateEnrollmentStatus(ctx context.Context, student
 	}
 
 	// Create audit log
-	resourceID := fmt.Sprintf("%s-%s", studentID, courseID)
 	payloadBefore := fmt.Sprintf(`{"status":"%s"}`, oldStatus)
 	payloadAfter := fmt.Sprintf(`{"status":"%s"}`, status)
-	auditLog, _ := entity.NewAuditLog(entity.AuditActionEnrollmentUpdated, resourceID, "enrollment", payloadBefore, payloadAfter, &userID)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionEnrollmentUpdated, courseID, "enrollment", payloadBefore, payloadAfter, &userID)
 	uc.auditLogRepo.Create(ctx, auditLog)
 
 	return nil
 }
 
-func (uc *EnrollmentUseCase) DropEnrollment(ctx context.Context, studentID, courseID, userID string) error {
+func (uc *EnrollmentUseCase) DropEnrollment(ctx context.Context, studentID, courseID, userID uuid.UUID) error {
 	return uc.UpdateEnrollmentStatus(ctx, studentID, courseID, entity.EnrollmentStatusDropped, userID)
 }
 
-func (uc *EnrollmentUseCase) CompleteEnrollment(ctx context.Context, studentID, courseID, userID string) error {
+func (uc *EnrollmentUseCase) CompleteEnrollment(ctx context.Context, studentID, courseID, userID uuid.UUID) error {
 	return uc.UpdateEnrollmentStatus(ctx, studentID, courseID, entity.EnrollmentStatusCompleted, userID)
 }

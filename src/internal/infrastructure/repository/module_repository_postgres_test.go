@@ -125,7 +125,7 @@ func TestPostgresModuleRepository_GetByID_NotFound(t *testing.T) {
 	db, _ := setupModuleTestDB(t)
 	repo := repository.NewPostgresModuleRepository(db)
 
-	_, err := repo.GetByID(context.Background(), uuid.New().String())
+	_, err := repo.GetByID(context.Background(), uuid.New())
 	assert.Error(t, err)
 	assert.Equal(t, entity.ErrNotFound, err)
 }
@@ -134,7 +134,7 @@ func TestPostgresModuleRepository_Delete_NotFound(t *testing.T) {
 	db, _ := setupModuleTestDB(t)
 	repo := repository.NewPostgresModuleRepository(db)
 
-	err := repo.Delete(context.Background(), uuid.New().String())
+	err := repo.Delete(context.Background(), uuid.New())
 	assert.NoError(t, err)
 }
 
@@ -142,7 +142,7 @@ func TestPostgresModuleRepository_GetByCourse_Empty(t *testing.T) {
 	db, _ := setupModuleTestDB(t)
 	repo := repository.NewPostgresModuleRepository(db)
 
-	modules, err := repo.GetByCourse(context.Background(), uuid.New().String())
+	modules, err := repo.GetByCourse(context.Background(), uuid.New())
 	assert.NoError(t, err)
 	assert.Len(t, modules, 0)
 }

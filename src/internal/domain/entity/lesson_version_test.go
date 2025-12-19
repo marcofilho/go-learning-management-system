@@ -8,7 +8,7 @@ import (
 )
 
 func TestLessonVersion_Validate(t *testing.T) {
-	validModuleID := uuid.New().String()
+	validModuleID := uuid.New()
 
 	tests := []struct {
 		name    string
@@ -47,7 +47,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 		{
 			name: "empty module ID",
 			lesson: &LessonVersion{
-				ModuleID:      "",
+				ModuleID:      uuid.Nil,
 				VersionNumber: 1,
 				Content:       "Content",
 			},
@@ -57,7 +57,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 		{
 			name: "invalid module UUID",
 			lesson: &LessonVersion{
-				ModuleID:      "not-a-uuid",
+				ModuleID:      validModuleID,
 				VersionNumber: 1,
 				Content:       "Content",
 			},
@@ -102,7 +102,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 }
 
 func TestLessonVersion_BelongsToModule(t *testing.T) {
-	moduleID := uuid.New().String()
+	moduleID := uuid.New()
 	lesson := &LessonVersion{
 		ModuleID:      moduleID,
 		VersionNumber: 1,
@@ -110,7 +110,7 @@ func TestLessonVersion_BelongsToModule(t *testing.T) {
 	}
 
 	assert.True(t, lesson.BelongsToModule(moduleID))
-	assert.False(t, lesson.BelongsToModule(uuid.New().String()))
+	assert.False(t, lesson.BelongsToModule(uuid.New()))
 }
 
 func TestLessonVersion_CanBeModifiedBy(t *testing.T) {
@@ -118,13 +118,13 @@ func TestLessonVersion_CanBeModifiedBy(t *testing.T) {
 	otherInstructor, _ := NewUser("other@example.com", "password123", "Other", "Instructor", UserRoleInstructor)
 
 	course := &Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}
 
 	lesson := &LessonVersion{
-		ModuleID:      uuid.New().String(),
+		ModuleID:      uuid.New(),
 		VersionNumber: 1,
 		Content:       "Test content",
 	}

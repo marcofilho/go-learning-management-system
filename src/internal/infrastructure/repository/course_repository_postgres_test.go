@@ -144,7 +144,7 @@ func TestPostgresCourseRepository_GetByInstructor_NotFound(t *testing.T) {
 	db, _ := setupCourseTestDB(t)
 	repo := repository.NewPostgresCourseRepository(db)
 
-	courses, err := repo.GetByInstructor(context.Background(), uuid.New().String())
+	courses, err := repo.GetByInstructor(context.Background(), uuid.New())
 	assert.NoError(t, err)
 	assert.NotNil(t, courses)
 	assert.Len(t, courses, 0)
@@ -165,7 +165,8 @@ func TestPostgresCourseRepository_List_WithFilters(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("Filter by InstructorID", func(t *testing.T) {
-		courses, err := repo.List(context.Background(), &domainRepository.CourseFilter{InstructorID: &instructor.ID})
+		instructorIDStr := instructor.ID.String()
+		courses, err := repo.List(context.Background(), &domainRepository.CourseFilter{InstructorID: &instructorIDStr})
 		assert.NoError(t, err)
 		assert.Len(t, courses, 2)
 	})
@@ -189,7 +190,7 @@ func TestPostgresCourseRepository_GetByID_NotFound(t *testing.T) {
 	db, _ := setupCourseTestDB(t)
 	repo := repository.NewPostgresCourseRepository(db)
 
-	_, err := repo.GetByID(context.Background(), uuid.New().String())
+	_, err := repo.GetByID(context.Background(), uuid.New())
 	assert.Error(t, err)
 	assert.Equal(t, entity.ErrNotFound, err)
 }
@@ -233,7 +234,7 @@ func TestPostgresCourseRepository_Delete_NotFound(t *testing.T) {
 	db, _ := setupCourseTestDB(t)
 	repo := repository.NewPostgresCourseRepository(db)
 
-	nonExistentID := uuid.New().String()
+	nonExistentID := uuid.New()
 
 	err := repo.Delete(context.Background(), nonExistentID)
 	assert.NoError(t, err)

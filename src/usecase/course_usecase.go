@@ -71,7 +71,7 @@ func (uc *CourseUseCase) UpdateCourse(ctx context.Context, course *entity.Course
 		return err
 	}
 
-	if !course.CanBeModifiedBy(user) {
+	if !course.CanBeModifiedBy(user.ID, user.Role) {
 		return entity.ErrInsufficientPermissions
 	}
 
@@ -89,7 +89,7 @@ func (uc *CourseUseCase) UpdateCourse(ctx context.Context, course *entity.Course
 	return nil
 }
 
-func (uc *CourseUseCase) DeleteCourse(ctx context.Context, courseID, userID string) error {
+func (uc *CourseUseCase) DeleteCourse(ctx context.Context, courseID uuid.UUID, userID uuid.UUID) error {
 	course, err := uc.courseRepo.GetByID(ctx, courseID)
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (uc *CourseUseCase) DeleteCourse(ctx context.Context, courseID, userID stri
 		return err
 	}
 
-	if !course.CanBeModifiedBy(user) {
+	if !course.CanBeModifiedBy(user.ID, user.Role) {
 		return entity.ErrInsufficientPermissions
 	}
 

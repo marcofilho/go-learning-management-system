@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/infrastructure/auth"
@@ -61,7 +62,7 @@ func (uc *UserUseCase) Login(ctx context.Context, email, password string) (strin
 	return token, user, nil
 }
 
-func (uc *UserUseCase) GetUserByID(ctx context.Context, id string) (*entity.User, error) {
+func (uc *UserUseCase) GetUserByID(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	return uc.userRepo.GetByID(ctx, id)
 }
 
@@ -78,6 +79,6 @@ func (uc *UserUseCase) UpdateUser(ctx context.Context, user *entity.User) error 
 	return uc.userRepo.Update(ctx, user)
 }
 
-func (uc *UserUseCase) DeleteUser(ctx context.Context, id string) error {
+func (uc *UserUseCase) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return uc.userRepo.Delete(ctx, id)
 }

@@ -20,7 +20,7 @@ func TestCourseUseCase_CreateCourse(t *testing.T) {
 		name      string
 		title     string
 		desc      string
-		instID    string
+		instID    uuid.UUID
 		level     entity.DifficultyLevel
 		setupMock func(*MockCourseRepository, *MockUserRepository, *MockAuditLogRepository)
 		wantErr   bool
@@ -43,7 +43,7 @@ func TestCourseUseCase_CreateCourse(t *testing.T) {
 			name:   "instructor not found",
 			title:  "Test Course",
 			desc:   "Test Description",
-			instID: uuid.New().String(),
+			instID: uuid.New(),
 			level:  entity.DifficultyLevelBeginner,
 			setupMock: func(courseRepo *MockCourseRepository, userRepo *MockUserRepository, auditRepo *MockAuditLogRepository) {
 				userRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, entity.ErrNotFound)
@@ -90,7 +90,7 @@ func TestCourseUseCase_GetCourseByID(t *testing.T) {
 	mockAuditRepo := new(MockAuditLogRepository)
 
 	course := &entity.Course{
-		ID:    uuid.New().String(),
+		ID:    uuid.New(),
 		Title: "Test Course",
 	}
 
@@ -110,8 +110,8 @@ func TestCourseUseCase_ListCourses(t *testing.T) {
 	mockAuditRepo := new(MockAuditLogRepository)
 
 	courses := []*entity.Course{
-		{ID: "1", Title: "Course 1"},
-		{ID: "2", Title: "Course 2"},
+		{ID: uuid.New(), Title: "Course 1"},
+		{ID: uuid.New(), Title: "Course 2"},
 	}
 	filter := &repository.CourseFilter{Limit: 10, Offset: 0}
 
@@ -130,10 +130,10 @@ func TestCourseUseCase_GetCoursesByInstructor(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockAuditRepo := new(MockAuditLogRepository)
 
-	instructorID := uuid.New().String()
+	instructorID := uuid.New()
 	courses := []*entity.Course{
-		{ID: "1", Title: "Course 1", InstructorID: instructorID},
-		{ID: "2", Title: "Course 2", InstructorID: instructorID},
+		{ID: uuid.New(), Title: "Course 1", InstructorID: instructorID},
+		{ID: uuid.New(), Title: "Course 2", InstructorID: instructorID},
 	}
 
 	mockCourseRepo.On("GetByInstructor", mock.Anything, instructorID).Return(courses, nil)
@@ -149,7 +149,7 @@ func TestCourseUseCase_GetCoursesByInstructor(t *testing.T) {
 func TestCourseUseCase_UpdateCourse(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	course := &entity.Course{
-		ID:              uuid.New().String(),
+		ID:              uuid.New(),
 		Title:           "Updated Course",
 		Description:     "Test description",
 		InstructorID:    instructor.ID,
@@ -177,7 +177,7 @@ func TestCourseUseCase_UpdateCourse(t *testing.T) {
 func TestCourseUseCase_DeleteCourse(t *testing.T) {
 	instructor, _ := entity.NewUser("instructor@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
 	course := &entity.Course{
-		ID:           uuid.New().String(),
+		ID:           uuid.New(),
 		Title:        "Test Course",
 		InstructorID: instructor.ID,
 	}

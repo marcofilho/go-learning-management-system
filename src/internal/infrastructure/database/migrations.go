@@ -77,6 +77,7 @@ func createIndexes(db *gorm.DB) error {
 
 func DropAllTables(db *gorm.DB) error {
 	return db.Migrator().DropTable(
+		&entity.AuditLog{},
 		&entity.Enrollment{},
 		&entity.LessonVersion{},
 		&entity.Module{},

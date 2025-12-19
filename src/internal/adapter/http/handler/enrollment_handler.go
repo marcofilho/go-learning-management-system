@@ -68,7 +68,7 @@ func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	enrollment, err := h.enrollmentUseCase.EnrollStudent(r.Context(), studentID.String(), courseID.String(), userID.String())
+	enrollment, err := h.enrollmentUseCase.EnrollStudent(r.Context(), studentID, courseID, userID)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -101,7 +101,7 @@ func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Req
 	}
 
 	filter := parseEnrollmentFilter(r)
-	enrollments, err := h.enrollmentUseCase.GetStudentCourses(r.Context(), studentID.String(), filter)
+	enrollments, err := h.enrollmentUseCase.GetStudentCourses(r.Context(), studentID, filter)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -139,7 +139,7 @@ func (h *EnrollmentHandler) GetCourseStudents(w http.ResponseWriter, r *http.Req
 	}
 
 	filter := parseEnrollmentFilter(r)
-	enrollments, err := h.enrollmentUseCase.GetCourseStudents(r.Context(), courseID.String(), filter)
+	enrollments, err := h.enrollmentUseCase.GetCourseStudents(r.Context(), courseID, filter)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return

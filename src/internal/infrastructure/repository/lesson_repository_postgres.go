@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
@@ -21,7 +22,7 @@ func (r *PostgresLessonRepository) Create(ctx context.Context, lesson *entity.Le
 	return r.db.WithContext(ctx).Create(lesson).Error
 }
 
-func (r *PostgresLessonRepository) GetByID(ctx context.Context, id string) (*entity.LessonVersion, error) {
+func (r *PostgresLessonRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.LessonVersion, error) {
 	var lesson entity.LessonVersion
 	if err := r.db.WithContext(ctx).First(&lesson, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -32,7 +33,7 @@ func (r *PostgresLessonRepository) GetByID(ctx context.Context, id string) (*ent
 	return &lesson, nil
 }
 
-func (r *PostgresLessonRepository) GetByModule(ctx context.Context, moduleID string) ([]*entity.LessonVersion, error) {
+func (r *PostgresLessonRepository) GetByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
 	var lessons []*entity.LessonVersion
 	if err := r.db.WithContext(ctx).
 		Where("module_id = ?", moduleID).
@@ -43,7 +44,7 @@ func (r *PostgresLessonRepository) GetByModule(ctx context.Context, moduleID str
 	return lessons, nil
 }
 
-func (r *PostgresLessonRepository) GetLatestByModule(ctx context.Context, moduleID string) ([]*entity.LessonVersion, error) {
+func (r *PostgresLessonRepository) GetLatestByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
 	var lessons []*entity.LessonVersion
 
 	// Get the latest version for each lesson in the module
@@ -61,7 +62,7 @@ func (r *PostgresLessonRepository) GetLatestByModule(ctx context.Context, module
 	return lessons, nil
 }
 
-func (r *PostgresLessonRepository) GetAllVersions(ctx context.Context, lessonID string) ([]*entity.LessonVersion, error) {
+func (r *PostgresLessonRepository) GetAllVersions(ctx context.Context, lessonID uuid.UUID) ([]*entity.LessonVersion, error) {
 	var lesson entity.LessonVersion
 	if err := r.db.WithContext(ctx).First(&lesson, "id = ?", lessonID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -80,7 +81,7 @@ func (r *PostgresLessonRepository) GetAllVersions(ctx context.Context, lessonID 
 	return versions, nil
 }
 
-func (r *PostgresLessonRepository) GetNextVersionNumber(ctx context.Context, moduleID string) (int, error) {
+func (r *PostgresLessonRepository) GetNextVersionNumber(ctx context.Context, moduleID uuid.UUID) (int, error) {
 	var maxVersion int
 	err := r.db.WithContext(ctx).
 		Model(&entity.LessonVersion{}).
@@ -94,6 +95,6 @@ func (r *PostgresLessonRepository) GetNextVersionNumber(ctx context.Context, mod
 	return maxVersion + 1, nil
 }
 
-func (r *PostgresLessonRepository) Delete(ctx context.Context, id string) error {
+func (r *PostgresLessonRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&entity.LessonVersion{}, "id = ?", id).Error
 }

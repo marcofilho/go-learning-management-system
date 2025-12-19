@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 	"gorm.io/gorm"
@@ -21,7 +22,7 @@ func (r *PostgresEnrollmentRepository) Create(ctx context.Context, enrollment *e
 	return r.db.WithContext(ctx).Create(enrollment).Error
 }
 
-func (r *PostgresEnrollmentRepository) GetByStudentAndCourse(ctx context.Context, studentID, courseID string) (*entity.Enrollment, error) {
+func (r *PostgresEnrollmentRepository) GetByStudentAndCourse(ctx context.Context, studentID, courseID uuid.UUID) (*entity.Enrollment, error) {
 	var enrollment entity.Enrollment
 	if err := r.db.WithContext(ctx).
 		Where("student_id = ? AND course_id = ?", studentID, courseID).
@@ -38,13 +39,13 @@ func (r *PostgresEnrollmentRepository) Update(ctx context.Context, enrollment *e
 	return r.db.WithContext(ctx).Save(enrollment).Error
 }
 
-func (r *PostgresEnrollmentRepository) Delete(ctx context.Context, studentID, courseID string) error {
+func (r *PostgresEnrollmentRepository) Delete(ctx context.Context, studentID, courseID uuid.UUID) error {
 	return r.db.WithContext(ctx).
 		Where("student_id = ? AND course_id = ?", studentID, courseID).
 		Delete(&entity.Enrollment{}).Error
 }
 
-func (r *PostgresEnrollmentRepository) GetByStudent(ctx context.Context, studentID string, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (r *PostgresEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
 	var enrollments []*entity.Enrollment
 	query := r.db.WithContext(ctx).Where("student_id = ?", studentID)
 
@@ -58,7 +59,7 @@ func (r *PostgresEnrollmentRepository) GetByStudent(ctx context.Context, student
 	return enrollments, nil
 }
 
-func (r *PostgresEnrollmentRepository) GetByCourse(ctx context.Context, courseID string, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (r *PostgresEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
 	var enrollments []*entity.Enrollment
 	query := r.db.WithContext(ctx).Where("course_id = ?", courseID)
 

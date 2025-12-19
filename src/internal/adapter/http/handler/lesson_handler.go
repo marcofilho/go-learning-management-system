@@ -61,7 +61,7 @@ func (h *LessonHandler) CreateLesson(w http.ResponseWriter, r *http.Request) {
 		AttachmentURL: req.AttachmentURL,
 	}
 
-	if err := h.lessonUseCase.CreateLesson(r.Context(), lesson, userID.String()); err != nil {
+	if err := h.lessonUseCase.CreateLesson(r.Context(), lesson, userID); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
@@ -135,7 +135,7 @@ func (h *LessonHandler) CreateLessonVersion(w http.ResponseWriter, r *http.Reque
 		AttachmentURL: req.AttachmentURL,
 	}
 
-	if err := h.lessonUseCase.CreateLessonVersion(r.Context(), lessonID.String(), newVersion, userID.String()); err != nil {
+	if err := h.lessonUseCase.CreateLessonVersion(r.Context(), lessonID, newVersion, userID); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}
@@ -173,7 +173,7 @@ func (h *LessonHandler) GetModuleLessons(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	lessons, err := h.lessonUseCase.GetLatestLessonsByModule(r.Context(), moduleID.String())
+	lessons, err := h.lessonUseCase.GetLatestLessonsByModule(r.Context(), moduleID)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -215,7 +215,7 @@ func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	versions, err := h.lessonUseCase.GetAllLessonVersions(r.Context(), lessonID.String())
+	versions, err := h.lessonUseCase.GetAllLessonVersions(r.Context(), lessonID)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -264,7 +264,7 @@ func (h *LessonHandler) DeleteLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.lessonUseCase.DeleteLesson(r.Context(), lessonID.String(), userID.String()); err != nil {
+	if err := h.lessonUseCase.DeleteLesson(r.Context(), lessonID, userID); err != nil {
 		handleUseCaseError(w, err)
 		return
 	}

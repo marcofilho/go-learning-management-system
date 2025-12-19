@@ -10,7 +10,7 @@ import (
 
 func TestNewEnrollment(t *testing.T) {
 	student, _ := NewUser("student@example.com", "pass123", "John", "Doe", UserRoleStudent)
-	courseID := uuid.New().String()
+	courseID := uuid.New()
 
 	enrollment, err := NewEnrollment(student, courseID)
 	require.NoError(t, err)
@@ -22,8 +22,8 @@ func TestNewEnrollment(t *testing.T) {
 
 func TestEnrollment_Complete(t *testing.T) {
 	enrollment := &Enrollment{
-		StudentID: uuid.New().String(),
-		CourseID:  uuid.New().String(),
+		StudentID: uuid.New(),
+		CourseID:  uuid.New(),
 		Status:    EnrollmentStatusActive,
 	}
 	enrollment.Complete()
@@ -32,8 +32,8 @@ func TestEnrollment_Complete(t *testing.T) {
 
 func TestEnrollment_Drop(t *testing.T) {
 	enrollment := &Enrollment{
-		StudentID: uuid.New().String(),
-		CourseID:  uuid.New().String(),
+		StudentID: uuid.New(),
+		CourseID:  uuid.New(),
 		Status:    EnrollmentStatusActive,
 	}
 	enrollment.Drop()
@@ -63,8 +63,8 @@ func TestEnrollment_Validate(t *testing.T) {
 		{
 			name: "EmptyStudentID",
 			enrollment: &Enrollment{
-				StudentID: "",
-				CourseID:  uuid.New().String(),
+				StudentID: uuid.Nil,
+				CourseID:  uuid.New(),
 				Status:    EnrollmentStatusActive,
 			},
 			wantErr: true,
@@ -72,8 +72,8 @@ func TestEnrollment_Validate(t *testing.T) {
 		{
 			name: "InvalidStudentID",
 			enrollment: &Enrollment{
-				StudentID: "invalid-uuid",
-				CourseID:  uuid.New().String(),
+				StudentID: uuid.Nil,
+				CourseID:  uuid.New(),
 				Status:    EnrollmentStatusActive,
 			},
 			wantErr: true,
@@ -82,7 +82,7 @@ func TestEnrollment_Validate(t *testing.T) {
 			name: "EmptyCourseID",
 			enrollment: &Enrollment{
 				StudentID: student.ID,
-				CourseID:  "",
+				CourseID:  uuid.Nil,
 				Status:    EnrollmentStatusActive,
 			},
 			wantErr: true,
@@ -91,7 +91,7 @@ func TestEnrollment_Validate(t *testing.T) {
 			name: "InvalidCourseID",
 			enrollment: &Enrollment{
 				StudentID: student.ID,
-				CourseID:  "invalid-uuid",
+				CourseID:  uuid.Nil,
 				Status:    EnrollmentStatusActive,
 			},
 			wantErr: true,
@@ -100,7 +100,7 @@ func TestEnrollment_Validate(t *testing.T) {
 			name: "InvalidStatus",
 			enrollment: &Enrollment{
 				StudentID: student.ID,
-				CourseID:  uuid.New().String(),
+				CourseID:  uuid.New(),
 				Status:    "invalid-status",
 			},
 			wantErr: true,

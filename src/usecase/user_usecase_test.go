@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/infrastructure/auth"
 	"github.com/stretchr/testify/assert"
@@ -247,7 +248,7 @@ func TestUserUseCase_UpdateUser(t *testing.T) {
 }
 
 func TestUserUseCase_DeleteUser(t *testing.T) {
-	userID := "test-user-id"
+	userID := uuid.New()
 
 	mockRepo := new(MockUserRepository)
 	mockTokenProvider := new(MockTokenProvider)

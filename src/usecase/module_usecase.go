@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 )
@@ -19,7 +20,7 @@ func NewModuleUseCase(moduleRepo repository.ModuleRepository, courseRepo reposit
 	}
 }
 
-func (uc *ModuleUseCase) CreateModule(ctx context.Context, module *entity.Module, instructorID string) error {
+func (uc *ModuleUseCase) CreateModule(ctx context.Context, module *entity.Module, instructorID uuid.UUID) error {
 	if err := module.Validate(); err != nil {
 		return err
 	}
@@ -36,7 +37,7 @@ func (uc *ModuleUseCase) CreateModule(ctx context.Context, module *entity.Module
 	return uc.moduleRepo.Create(ctx, module)
 }
 
-func (uc *ModuleUseCase) GetModulesByCourse(ctx context.Context, courseID string) ([]*entity.Module, error) {
+func (uc *ModuleUseCase) GetModulesByCourse(ctx context.Context, courseID uuid.UUID) ([]*entity.Module, error) {
 	if _, err := uc.courseRepo.GetByID(ctx, courseID); err != nil {
 		return nil, err
 	}
@@ -44,11 +45,11 @@ func (uc *ModuleUseCase) GetModulesByCourse(ctx context.Context, courseID string
 	return uc.moduleRepo.GetByCourse(ctx, courseID)
 }
 
-func (uc *ModuleUseCase) GetModule(ctx context.Context, id string) (*entity.Module, error) {
+func (uc *ModuleUseCase) GetModule(ctx context.Context, id uuid.UUID) (*entity.Module, error) {
 	return uc.moduleRepo.GetByID(ctx, id)
 }
 
-func (uc *ModuleUseCase) UpdateModule(ctx context.Context, module *entity.Module, instructorID string) error {
+func (uc *ModuleUseCase) UpdateModule(ctx context.Context, module *entity.Module, instructorID uuid.UUID) error {
 	if err := module.Validate(); err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func (uc *ModuleUseCase) UpdateModule(ctx context.Context, module *entity.Module
 	return uc.moduleRepo.Update(ctx, module)
 }
 
-func (uc *ModuleUseCase) DeleteModule(ctx context.Context, id string, instructorID string) error {
+func (uc *ModuleUseCase) DeleteModule(ctx context.Context, id uuid.UUID, instructorID uuid.UUID) error {
 	existing, err := uc.moduleRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
