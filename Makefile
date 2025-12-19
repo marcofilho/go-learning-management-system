@@ -1,4 +1,4 @@
-.PHONY: help start build run test clean docker-build docker-up docker-down migrate migrate-up migrate-down migrate-status migrate-version migrate-force migrate-create fmt lint swagger build-all health db-shell db-backup db-restore db-tables db-reset migrate-status-docker docker-restart docker-logs dev deps
+.PHONY: help start build run test test-all test-workflow test-integration clean docker-build docker-up docker-down migrate migrate-up migrate-down migrate-status migrate-version migrate-force migrate-create fmt lint swagger build-all health db-shell db-backup db-restore db-tables db-reset migrate-status-docker docker-restart docker-logs dev deps
 
 # Default target
 help:
@@ -20,6 +20,12 @@ help:
 	@echo "  make docker-down        - Stop services"
 	@echo "  make docker-restart     - Restart services"
 	@echo "  make docker-logs        - View API logs"
+	@echo ""
+	@echo "Testing:"
+	@echo "  make test               - Run unit tests (excludes DB adapters)"
+	@echo "  make test-all           - Run all tests (includes DB adapters)"
+	@echo "  make test-workflow      - Run full integration workflow"
+	@echo "  make test-integration   - Full end-to-end test (requires Docker)"
 	@echo ""
 	@echo "Database Migrations:"
 	@echo "  make migrate-up         - Apply all pending migrations"
@@ -257,6 +263,27 @@ db-reset:
 	if [ "$$confirm" = "yes" ]; then \
 		echo "Resetting database..."; \
 		docker-compose down -v; \
+		docker-compose up -d; \
+		sleep 5; \
+		echo "Database reset complete"; \
+	fi
+
+# Full integration workflow test
+test-workflow:
+	@echo "🧪 Running full integration workflow test..."
+	@chmod +x test_workflow.sh
+	@./test_workflow.sh
+
+# End-to-end integration test (requires Docker)
+test-integration:
+	@echo "🧪 Running end-to-end integration tests..."
+	@echo "Ensuring services are running..."
+	@docker-compose ps | grep -q "api" || docker-compose up -d
+	@sleep 3
+	@chmod +x test_workflow.sh
+	@./test_workflow.sh
+	@echo ""
+	@echo "✅ Integration test complete!"
 		docker-compose up -d; \
 		echo "✅ Database reset complete"; \
 	else \
