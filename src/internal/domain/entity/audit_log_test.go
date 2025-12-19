@@ -65,17 +65,8 @@ func TestNewAuditLog(t *testing.T) {
 			wantErr:       true,
 			errMsg:        "entity_id is required",
 		},
-		{
-			name:          "invalid resource UUID",
-			action:        AuditActionCourseCreated,
-			entityID:      entityID,
-			entityType:    "course",
-			payloadBefore: "",
-			payloadAfter:  `{}`,
-			userID:        &userID,
-			wantErr:       true,
-			errMsg:        "action is required",
-		},
+		// Note: Can't test invalid UUID at this level since uuid.UUID type is always valid
+		// Invalid UUID would be caught at parsing level before reaching this constructor
 		{
 			name:          "empty resource type",
 			action:        AuditActionCourseCreated,
@@ -87,17 +78,7 @@ func TestNewAuditLog(t *testing.T) {
 			wantErr:       true,
 			errMsg:        "entity_type is required",
 		},
-		{
-			name:          "invalid user UUID",
-			action:        AuditActionCourseCreated,
-			entityID:      entityID,
-			entityType:    "course",
-			payloadBefore: "",
-			payloadAfter:  `{}`,
-			userID:        nil,
-			wantErr:       true,
-			errMsg:        "must be a valid UUID",
-		},
+		// Note: nil userID is valid - validation only checks if non-nil UUID is valid
 	}
 
 	for _, tt := range tests {

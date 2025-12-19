@@ -54,16 +54,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 			wantErr: true,
 			errMsg:  "module_id is required",
 		},
-		{
-			name: "invalid module UUID",
-			lesson: &LessonVersion{
-				ModuleID:      validModuleID,
-				VersionNumber: 1,
-				Content:       "Content",
-			},
-			wantErr: true,
-			errMsg:  "must be a valid UUID",
-		},
+		// Note: Can't test invalid UUID at this level since uuid.UUID type is always valid
 		{
 			name: "version number less than 1",
 			lesson: &LessonVersion{

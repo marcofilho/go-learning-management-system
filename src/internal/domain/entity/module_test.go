@@ -55,16 +55,7 @@ func TestModule_Validate(t *testing.T) {
 			wantErr: true,
 			errMsg:  "course_id is required",
 		},
-		{
-			name: "invalid course UUID",
-			module: &Module{
-				Title:      "Introduction",
-				CourseID:   validCourseID,
-				OrderIndex: 0,
-			},
-			wantErr: true,
-			errMsg:  "must be a valid UUID",
-		},
+		// Note: Can't test invalid UUID at this level since uuid.UUID type is always valid
 		{
 			name: "negative order index",
 			module: &Module{
