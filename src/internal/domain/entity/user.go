@@ -2,7 +2,6 @@ package entity
 
 import (
 	"fmt"
-
 	"regexp"
 	"strings"
 	"time"
@@ -23,16 +22,16 @@ const (
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type User struct {
-	ID           string         `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	Email        string         `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash string         `gorm:"not null" json:"-"`
-	FirstName    string         `gorm:"not null" json:"first_name"`
-	LastName     string         `gorm:"not null" json:"last_name"`
-	Role         UserRole       `gorm:"type:varchar(20);not null;default:'student'" json:"role"`
-	IsActive     bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt    time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
+	ID        uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	Email     string         `gorm:"uniqueIndex;not null" json:"email"`
+	Password  string         `gorm:"not null" json:"-"`
+	FirstName string         `gorm:"not null" json:"first_name"`
+	LastName  string         `gorm:"not null" json:"last_name"`
+	Role      UserRole       `gorm:"type:varchar(20);not null;default:'student'" json:"role"`
+	IsActive  bool           `gorm:"default:true" json:"is_active"`
+	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 func (User) TableName() string {
@@ -64,29 +63,21 @@ func (u *User) Validate() error {
 }
 
 func NewUser(email, password, firstName, lastName string, role UserRole) (*User, error) {
-	if strings.TrimSpace(password) == "" {
-		return nil, fmt.Errorf("%w: password is required", ErrFieldRequired)
-	}
-
-	if len(password) < 6 {
-		return nil, fmt.Errorf("%w: password must be at least 6 characters", ErrInvalidInput)
-	}
-
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
 	user := &User{
-		ID:           uuid.New().String(),
-		Email:        email,
-		PasswordHash: string(hashedPassword),
-		FirstName:    firstName,
-		LastName:     lastName,
-		Role:         role,
-		IsActive:     true,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		ID:        uuid.New(),
+		Email:     email,
+		Password:  string(hashedPassword),
+		FirstName: firstName,
+		LastName:  lastName,
+		Role:      role,
+		IsActive:  true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	if err := user.Validate(); err != nil {
@@ -97,7 +88,7 @@ func NewUser(email, password, firstName, lastName string, role UserRole) (*User,
 }
 
 func (u *User) ValidatePassword(password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 }
 
 func (u *User) CanAuthenticate() error {
@@ -121,4 +112,21 @@ func (u *User) IsAdmin() bool {
 
 func (u *User) FullName() string {
 	return u.FirstName + " " + u.LastName
+}
+
+func (u *User) SetPassword(password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.Password = string(hashedPassword)
+	return nil
+}
+
+func (u *User) IsOwnedBy(id uuid.UUID) bool {
+	return u.ID == id
+}
+
+func (u *User) CanCreateCourses() bool {
+	return u.Role == UserRoleInstructor || u.Role == UserRoleAdmin
 }

@@ -2,7 +2,6 @@ package entity
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,37 +24,40 @@ const (
 )
 
 type AuditLog struct {
-	ID            string      `gorm:"type:uuid;primaryKey" json:"id"`
-	Action        AuditAction `gorm:"type:varchar(100);not null" json:"action"`
-	ResourceID    string      `gorm:"type:uuid;not null" json:"resource_id"`
-	ResourceType  string      `gorm:"type:varchar(50);not null" json:"resource_type"`
-	PayloadBefore string      `gorm:"type:jsonb" json:"payload_before,omitempty"`
-	PayloadAfter  string      `gorm:"type:jsonb" json:"payload_after,omitempty"`
-	UserID        *string     `gorm:"type:uuid" json:"user_id,omitempty"`
-	CreatedAt     time.Time   `gorm:"not null" json:"created_at"`
+	ID          uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	Action      AuditAction    `gorm:"type:varchar(50);not null" json:"action"`
+	EntityID    uuid.UUID      `gorm:"type:uuid;not null" json:"entity_id"`
+	EntityType  string         `gorm:"type:varchar(50);not null" json:"entity_type"`
+	OldValues   string         `gorm:"type:jsonb" json:"old_values,omitempty"`
+	NewValues   string         `gorm:"type:jsonb" json:"new_values,omitempty"`
+	UserID      *uuid.UUID     `gorm:"type:uuid" json:"user_id,omitempty"`
+	UserRole    *string        `gorm:"type:varchar(50)" json:"user_role,omitempty"`
+	PerformedAt time.Time      `gorm:"autoCreateTime" json:"performed_at"`
+	CreatedAt   time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	User *User `gorm:"foreignKey:UserID" json:"-"`
+}
+
+func (AuditLog) TableName() string {
+	return "audit_logs"
 }
 
 func (a *AuditLog) Validate() error {
-	if strings.TrimSpace(string(a.Action)) == "" {
+	if a.Action == "" {
 		return fmt.Errorf("%w: action is required", ErrFieldRequired)
 	}
 
-	if strings.TrimSpace(a.ResourceID) == "" {
-		return fmt.Errorf("%w: resource_id is required", ErrFieldRequired)
+	if a.EntityID == uuid.Nil {
+		return fmt.Errorf("%w: entity_id is required", ErrFieldRequired)
 	}
 
-	if _, err := uuid.Parse(a.ResourceID); err != nil {
-		return fmt.Errorf("%w: resource_id must be a valid UUID", ErrInvalidInput)
-	}
-
-	if strings.TrimSpace(a.ResourceType) == "" {
-		return fmt.Errorf("%w: resource_type is required", ErrFieldRequired)
+	if a.EntityType == "" {
+		return fmt.Errorf("%w: entity_type is required", ErrFieldRequired)
 	}
 
 	if a.UserID != nil {
-		if _, err := uuid.Parse(*a.UserID); err != nil {
+		if _, err := uuid.Parse((*a.UserID).String()); err != nil {
 			return fmt.Errorf("%w: user_id must be a valid UUID", ErrInvalidInput)
 		}
 	}
@@ -63,16 +65,15 @@ func (a *AuditLog) Validate() error {
 	return nil
 }
 
-func NewAuditLog(action AuditAction, resourceID, resourceType, payloadBefore, payloadAfter string, userID *string) (*AuditLog, error) {
+func NewAuditLog(action AuditAction, entityID uuid.UUID, entityType, oldValues, newValues string, userID *uuid.UUID) (*AuditLog, error) {
 	auditLog := &AuditLog{
-		ID:            uuid.New().String(),
-		Action:        action,
-		ResourceID:    resourceID,
-		ResourceType:  resourceType,
-		PayloadBefore: payloadBefore,
-		PayloadAfter:  payloadAfter,
-		UserID:        userID,
-		CreatedAt:     time.Now(),
+		ID:         uuid.New(),
+		Action:     action,
+		EntityID:   entityID,
+		EntityType: entityType,
+		OldValues:  oldValues,
+		NewValues:  newValues,
+		UserID:     userID,
 	}
 
 	if err := auditLog.Validate(); err != nil {

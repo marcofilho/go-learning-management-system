@@ -10,8 +10,8 @@ import (
 )
 
 type Module struct {
-	ID         string         `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	CourseID   string         `gorm:"type:uuid;not null;index" json:"course_id"`
+	ID         uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	CourseID   uuid.UUID      `gorm:"type:uuid;not null;index" json:"course_id"`
 	Title      string         `gorm:"not null" json:"title"`
 	OrderIndex int            `gorm:"not null;default:0" json:"order_index"`
 	CreatedAt  time.Time      `gorm:"autoCreateTime" json:"created_at"`
@@ -35,12 +35,8 @@ func (m *Module) Validate() error {
 		return fmt.Errorf("%w: title must not exceed 255 characters", ErrInvalidInput)
 	}
 
-	if strings.TrimSpace(m.CourseID) == "" {
+	if m.CourseID == uuid.Nil {
 		return fmt.Errorf("%w: course_id is required", ErrFieldRequired)
-	}
-
-	if _, err := uuid.Parse(m.CourseID); err != nil {
-		return fmt.Errorf("%w: course_id must be a valid UUID", ErrInvalidInput)
 	}
 
 	if m.OrderIndex < 0 {
@@ -50,16 +46,9 @@ func (m *Module) Validate() error {
 	return nil
 }
 
-func (m *Module) BelongsToCourse(courseID string) bool {
-	return m.CourseID == courseID
-}
-
-func (m *Module) CanBeModifiedBy(course *Course, userID string) bool {
-	return course.IsOwnedBy(userID)
-}
-
-func NewModule(title, courseID string) (*Module, error) {
+func NewModule(title string, courseID uuid.UUID) (*Module, error) {
 	module := &Module{
+		ID:       uuid.New(),
 		Title:    title,
 		CourseID: courseID,
 	}
@@ -67,4 +56,12 @@ func NewModule(title, courseID string) (*Module, error) {
 		return nil, err
 	}
 	return module, nil
+}
+
+func (m *Module) BelongsToCourse(courseID uuid.UUID) bool {
+	return m.CourseID == courseID
+}
+
+func (m *Module) CanBeModifiedBy(course *Course, userID uuid.UUID) bool {
+	return course.IsOwnedBy(userID)
 }

@@ -2,7 +2,6 @@ package entity
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,8 +17,8 @@ const (
 )
 
 type Enrollment struct {
-	StudentID      string           `gorm:"primaryKey;type:uuid;not null" json:"student_id"`
-	CourseID       string           `gorm:"primaryKey;type:uuid;not null" json:"course_id"`
+	StudentID      uuid.UUID        `gorm:"primaryKey;type:uuid;not null" json:"student_id"`
+	CourseID       uuid.UUID        `gorm:"primaryKey;type:uuid;not null" json:"course_id"`
 	EnrollmentDate time.Time        `gorm:"not null;autoCreateTime" json:"enrollment_date"`
 	Status         EnrollmentStatus `gorm:"type:varchar(20);not null;default:'active'" json:"status"`
 	CreatedAt      time.Time        `gorm:"autoCreateTime" json:"created_at"`
@@ -35,20 +34,12 @@ func (Enrollment) TableName() string {
 }
 
 func (e *Enrollment) Validate() error {
-	if strings.TrimSpace(e.StudentID) == "" {
+	if e.StudentID == uuid.Nil {
 		return fmt.Errorf("%w: student_id is required", ErrFieldRequired)
 	}
 
-	if _, err := uuid.Parse(e.StudentID); err != nil {
-		return fmt.Errorf("%w: student_id must be a valid UUID", ErrInvalidInput)
-	}
-
-	if strings.TrimSpace(e.CourseID) == "" {
+	if e.CourseID == uuid.Nil {
 		return fmt.Errorf("%w: course_id is required", ErrFieldRequired)
-	}
-
-	if _, err := uuid.Parse(e.CourseID); err != nil {
-		return fmt.Errorf("%w: course_id must be a valid UUID", ErrInvalidInput)
 	}
 
 	if e.Status != EnrollmentStatusActive &&
@@ -60,7 +51,7 @@ func (e *Enrollment) Validate() error {
 	return nil
 }
 
-func NewEnrollment(student *User, courseID string) (*Enrollment, error) {
+func NewEnrollment(student *User, courseID uuid.UUID) (*Enrollment, error) {
 	if !student.CanEnrollInCourses() {
 		return nil, ErrInvalidInput
 	}

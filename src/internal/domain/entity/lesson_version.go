@@ -10,8 +10,8 @@ import (
 )
 
 type LessonVersion struct {
-	ID            string         `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	ModuleID      string         `gorm:"type:uuid;not null;index" json:"module_id"`
+	ID            uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	ModuleID      uuid.UUID      `gorm:"type:uuid;not null;index" json:"module_id"`
 	Title         string         `gorm:"not null" json:"title"`
 	VersionNumber int            `gorm:"not null;default:1" json:"version_number"`
 	Content       string         `gorm:"type:text" json:"content"`
@@ -28,12 +28,8 @@ func (LessonVersion) TableName() string {
 }
 
 func (l *LessonVersion) Validate() error {
-	if strings.TrimSpace(l.ModuleID) == "" {
+	if l.ModuleID == uuid.Nil {
 		return fmt.Errorf("%w: module_id is required", ErrFieldRequired)
-	}
-
-	if _, err := uuid.Parse(l.ModuleID); err != nil {
-		return fmt.Errorf("%w: module_id must be a valid UUID", ErrInvalidInput)
 	}
 
 	if l.VersionNumber < 1 {
@@ -47,17 +43,11 @@ func (l *LessonVersion) Validate() error {
 	return nil
 }
 
-func (l *LessonVersion) BelongsToModule(moduleID string) bool {
-	return l.ModuleID == moduleID
-}
-
-func (l *LessonVersion) CanBeModifiedBy(course *Course, userID string) bool {
-	return course.IsOwnedBy(userID)
-}
-
-func NewLessonVersion(title, content, moduleID string, version int) (*LessonVersion, error) {
+func NewLessonVersion(title, content string, moduleID uuid.UUID, version int) (*LessonVersion, error) {
 	lesson := &LessonVersion{
+		ID:            uuid.New(),
 		ModuleID:      moduleID,
+		Title:         title,
 		VersionNumber: version,
 		Content:       content,
 	}
@@ -65,4 +55,12 @@ func NewLessonVersion(title, content, moduleID string, version int) (*LessonVers
 		return nil, err
 	}
 	return lesson, nil
+}
+
+func (l *LessonVersion) BelongsToModule(moduleID uuid.UUID) bool {
+	return l.ModuleID == moduleID
+}
+
+func (l *LessonVersion) CanBeModifiedBy(course *Course, userID uuid.UUID) bool {
+	return course.IsOwnedBy(userID)
 }

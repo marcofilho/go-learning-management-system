@@ -2,12 +2,10 @@ package entity
 
 import (
 	"fmt"
-
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
-
 	"gorm.io/gorm"
 )
 
@@ -20,11 +18,11 @@ const (
 )
 
 type Course struct {
-	ID              string          `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	ID              uuid.UUID       `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	Title           string          `gorm:"not null" json:"title"`
 	Description     string          `gorm:"type:text" json:"description"`
-	InstructorID    string          `gorm:"type:uuid;not null;index" json:"instructor_id"`
-	DifficultyLevel DifficultyLevel `gorm:"type:varchar(20);not null;default:'beginner'" json:"difficulty_level"`
+	InstructorID    uuid.UUID       `gorm:"type:uuid;not null;index" json:"instructor_id"`
+	DifficultyLevel DifficultyLevel `gorm:"type:varchar(20);not null" json:"difficulty_level"`
 	CreatedAt       time.Time       `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt       gorm.DeletedAt  `gorm:"index" json:"-"`
@@ -38,6 +36,10 @@ func (Course) TableName() string {
 }
 
 func (c *Course) Validate() error {
+	if _, err := uuid.Parse(c.ID.String()); err != nil && c.ID != uuid.Nil {
+		return fmt.Errorf("%w: id must be a valid UUID", ErrInvalidInput)
+	}
+
 	if strings.TrimSpace(c.Title) == "" {
 		return fmt.Errorf("%w: title is required", ErrFieldRequired)
 	}
@@ -46,16 +48,8 @@ func (c *Course) Validate() error {
 		return fmt.Errorf("%w: title must not exceed 255 characters", ErrInvalidInput)
 	}
 
-	if strings.TrimSpace(c.Description) == "" {
-		return fmt.Errorf("%w: description is required", ErrFieldRequired)
-	}
-
-	if strings.TrimSpace(c.InstructorID) == "" {
+	if c.InstructorID == uuid.Nil {
 		return fmt.Errorf("%w: instructor_id is required", ErrFieldRequired)
-	}
-
-	if _, err := uuid.Parse(c.InstructorID); err != nil {
-		return fmt.Errorf("%w: instructor_id must be a valid UUID", ErrInvalidInput)
 	}
 
 	if c.DifficultyLevel != DifficultyLevelBeginner &&
@@ -67,23 +61,14 @@ func (c *Course) Validate() error {
 	return nil
 }
 
-func NewCourse(title, description, instructorID string, difficultyLevel DifficultyLevel, instructor *User) (*Course, error) {
-	if !instructor.IsInstructor() {
-		return nil, ErrInsufficientPermissions
-	}
-
-	if difficultyLevel == "" {
-		difficultyLevel = DifficultyLevelBeginner
-	}
-
+func NewCourse(title, description string, instructorID uuid.UUID, difficultyLevel DifficultyLevel, instructor *User) (*Course, error) {
 	course := &Course{
-		ID:              uuid.New().String(),
+		ID:              uuid.New(),
 		Title:           title,
 		Description:     description,
 		InstructorID:    instructorID,
 		DifficultyLevel: difficultyLevel,
-		CreatedAt:       time.Now(),
-		UpdatedAt:       time.Now(),
+		Instructor:      instructor,
 	}
 
 	if err := course.Validate(); err != nil {
@@ -93,10 +78,10 @@ func NewCourse(title, description, instructorID string, difficultyLevel Difficul
 	return course, nil
 }
 
-func (c *Course) CanBeModifiedBy(user *User) bool {
-	return user.IsAdmin() || c.InstructorID == user.ID
+func (c *Course) IsOwnedBy(userID uuid.UUID) bool {
+	return c.InstructorID == userID
 }
 
-func (c *Course) IsOwnedBy(instructorID string) bool {
-	return c.InstructorID == instructorID
+func (c *Course) CanBeModifiedBy(userID uuid.UUID, userRole UserRole) bool {
+	return userRole == UserRoleAdmin || c.InstructorID == userID
 }
