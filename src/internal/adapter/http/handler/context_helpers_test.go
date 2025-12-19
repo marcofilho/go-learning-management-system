@@ -20,7 +20,7 @@ func TestGetUserIDFromContext(t *testing.T) {
 
 		retrievedUserID, ok := GetUserIDFromContext(req)
 		assert.True(t, ok)
-		assert.Equal(t, userID.String(), retrievedUserID)
+		assert.Equal(t, userID, retrievedUserID)
 	})
 
 	t.Run("should return empty string when user is not in context", func(t *testing.T) {
@@ -28,7 +28,7 @@ func TestGetUserIDFromContext(t *testing.T) {
 
 		retrievedUserID, ok := GetUserIDFromContext(req)
 		assert.False(t, ok)
-		assert.Empty(t, retrievedUserID)
+		assert.Equal(t, uuid.Nil, retrievedUserID)
 	})
 }
 
