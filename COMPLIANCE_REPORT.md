@@ -93,7 +93,7 @@ All requirements implemented with clean architecture, comprehensive testing, and
 3. Use case-level authorization (business rules)
 4. Entity-level checks (domain authorization)
 
-**Evidence**: `src/internal/adapter/http/middleware/authorization.go`, `ENDPOINT_AUTHORIZATION_VERIFICATION.md`
+**Evidence**: `src/internal/adapter/http/middleware/authorization.go`
 
 ---
 

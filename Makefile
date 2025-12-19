@@ -54,7 +54,7 @@ help:
 	@echo "  make health             - Check API health"
 	@echo "  make migrate-status-docker - Check migration status in Docker"
 	@echo ""
-	@echo "📚 Documentation: See README.md and QUICK_REFERENCE.md"
+	@echo "📚 Documentation: See README.md and other .md files in project root"
 
 # Start the entire project
 start:

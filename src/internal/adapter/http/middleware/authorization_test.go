@@ -317,6 +317,104 @@ func TestRequireModuleOwnership(t *testing.T) {
 	mockCourseRepo.AssertExpectations(t)
 }
 
+func TestRequireModuleAccess(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockEnrollmentRepo := new(MockEnrollmentRepository)
+	middleware := RequireModuleAccess(mockModuleRepo, mockCourseRepo, mockEnrollmentRepo)
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	moduleID := uuid.New()
+	courseID := uuid.New()
+	instructorID := uuid.New()
+	otherInstructorID := uuid.New()
+	studentID := uuid.New()
+	adminID := uuid.New()
+
+	module := &entity.Module{ID: moduleID, CourseID: courseID}
+	course := &entity.Course{ID: courseID, InstructorID: instructorID}
+	enrollment := &entity.Enrollment{StudentID: studentID, CourseID: courseID, Status: entity.EnrollmentStatusActive}
+
+	// Test case 1: Admin user
+	claims := &auth.Claims{UserID: adminID, Role: entity.UserRoleAdmin}
+	ctx := context.WithValue(context.Background(), UserContextKey, claims)
+	req := httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+	rr := httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// Test case 2: Course instructor (own course)
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil).Once()
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
+	claims = &auth.Claims{UserID: instructorID, Role: entity.UserRoleInstructor}
+	ctx = context.WithValue(context.Background(), UserContextKey, claims)
+	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+	rr = httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+
+	// Test case 3: Other instructor (not own course) - should be blocked
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil).Once()
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
+	claims = &auth.Claims{UserID: otherInstructorID, Role: entity.UserRoleInstructor}
+	ctx = context.WithValue(context.Background(), UserContextKey, claims)
+	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+	rr = httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+
+	// Test case 4: Enrolled student
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil).Once()
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
+	mockEnrollmentRepo.On("GetByStudentAndCourse", mock.Anything, studentID, courseID).Return(enrollment, nil).Once()
+	claims = &auth.Claims{UserID: studentID, Role: entity.UserRoleStudent}
+	ctx = context.WithValue(context.Background(), UserContextKey, claims)
+	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+	rr = httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+	mockEnrollmentRepo.AssertExpectations(t)
+
+	// Test case 5: Not enrolled student
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil).Once()
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil).Once()
+	mockEnrollmentRepo.On("GetByStudentAndCourse", mock.Anything, studentID, courseID).Return(nil, entity.ErrNotFound).Once()
+	claims = &auth.Claims{UserID: studentID, Role: entity.UserRoleStudent}
+	ctx = context.WithValue(context.Background(), UserContextKey, claims)
+	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+	rr = httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+	mockEnrollmentRepo.AssertExpectations(t)
+
+	// Test case 6: Module not found
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(nil, entity.ErrNotFound).Once()
+	claims = &auth.Claims{UserID: instructorID, Role: entity.UserRoleInstructor}
+	ctx = context.WithValue(context.Background(), UserContextKey, claims)
+	req = httptest.NewRequest(http.MethodGet, "/modules/"+moduleID.String(), nil).WithContext(ctx)
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+	rr = httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+}
+
 func TestRequireAdminOrSelf(t *testing.T) {
 	middleware := RequireAdminOrSelf()
 

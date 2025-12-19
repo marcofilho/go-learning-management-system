@@ -164,7 +164,7 @@ See [RBAC.md](RBAC.md) for detailed information about:
 
 ### Lessons
 - `GET /api/modules/:moduleId/lessons` - Get latest lessons for module
-- `GET /api/lessons/:id/versions` - Get all versions of a lesson
+- `GET /api/lessons/:id/all-versions` - Get all versions of a lesson (admin only)
 - `POST /api/modules/:moduleId/lessons` - Create lesson (instructor only)
 - `POST /api/lessons/:lessonId/version` - Create new lesson version (instructor only)
 - `DELETE /api/lessons/:id` - Delete lesson (instructor only)
@@ -261,11 +261,9 @@ go tool cover -html=coverage.out
 ```
 
 **Testing Documentation**:
-- [TESTING_QUICKSTART.md](TESTING_QUICKSTART.md) - Quick start guide
-- [UNIT_TESTING_GUIDE.md](UNIT_TESTING_GUIDE.md) - Comprehensive testing guide
-- [TESTING_IMPLEMENTATION_SUMMARY.md](TESTING_IMPLEMENTATION_SUMMARY.md) - Implementation details
+- [TESTING.md](TESTING.md) - Complete testing guide
 
-**Current Test Status**: ✅ Foundation complete with entity tests passing
+**Current Test Status**: ✅ **243 tests passing** with 76% coverage
 
 ### Code Formatting
 
