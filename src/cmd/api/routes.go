@@ -66,6 +66,7 @@ func SetupRoutes(
 
 	modules := api.PathPrefix("/modules").Subrouter()
 	modules.Use(middleware.AuthMiddleware(tokenProvider))
+	modules.HandleFunc("/{id}", moduleHandler.GetModule).Methods(http.MethodGet)
 	modules.Handle("/{id}", middleware.RequireModuleOwnership(moduleRepo, courseRepo)(http.HandlerFunc(moduleHandler.UpdateModule))).Methods(http.MethodPut)
 	modules.Handle("/{id}", middleware.RequireModuleOwnership(moduleRepo, courseRepo)(http.HandlerFunc(moduleHandler.DeleteModule))).Methods(http.MethodDelete)
 
@@ -81,6 +82,11 @@ func SetupRoutes(
 	students := api.PathPrefix("/students").Subrouter()
 	students.Use(middleware.AuthMiddleware(tokenProvider))
 	students.Handle("/{id}/courses", middleware.RequireAdminOrSelf()(http.HandlerFunc(enrollmentHandler.GetStudentCourses))).Methods(http.MethodGet)
+
+	enrollments := api.PathPrefix("/enrollments").Subrouter()
+	enrollments.Use(middleware.AuthMiddleware(tokenProvider))
+	enrollments.Handle("/{courseId}/status", middleware.RequireAdminOrSelf()(http.HandlerFunc(enrollmentHandler.UpdateEnrollmentStatus))).Methods(http.MethodPut)
+	enrollments.Handle("/{courseId}", middleware.RequireAdminOrSelf()(http.HandlerFunc(enrollmentHandler.DropEnrollment))).Methods(http.MethodDelete)
 
 	auditLogs := api.PathPrefix("/audit-logs").Subrouter()
 	auditLogs.Use(middleware.AuthMiddleware(tokenProvider))

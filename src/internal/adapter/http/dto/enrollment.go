@@ -22,3 +22,8 @@ type EnrollmentFilterRequest struct {
 	Limit    int    `json:"limit"`
 	Offset   int    `json:"offset"`
 }
+
+type UpdateEnrollmentStatusRequest struct {
+	StudentID string `json:"student_id,omitempty" validate:"omitempty,uuid"`
+	Status    string `json:"status" validate:"required,oneof=active dropped completed"`
+}

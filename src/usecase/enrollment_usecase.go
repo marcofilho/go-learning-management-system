@@ -75,19 +75,23 @@ func (uc *EnrollmentUseCase) GetCourseStudents(ctx context.Context, courseID uui
 	return uc.enrollmentRepo.GetByCourse(ctx, courseID, filter)
 }
 
-func (uc *EnrollmentUseCase) UpdateEnrollmentStatus(ctx context.Context, studentID, courseID uuid.UUID, status entity.EnrollmentStatus, userID uuid.UUID) error {
+func (uc *EnrollmentUseCase) GetEnrollment(ctx context.Context, studentID, courseID uuid.UUID) (*entity.Enrollment, error) {
+	return uc.enrollmentRepo.GetByStudentAndCourse(ctx, studentID, courseID)
+}
+
+func (uc *EnrollmentUseCase) UpdateEnrollmentStatus(ctx context.Context, studentID, courseID uuid.UUID, status entity.EnrollmentStatus, userID uuid.UUID) (*entity.Enrollment, error) {
 	enrollment, err := uc.enrollmentRepo.GetByStudentAndCourse(ctx, studentID, courseID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !enrollment.CanBeModifiedBy(user) {
-		return entity.ErrUnauthorized
+		return nil, entity.ErrUnauthorized
 	}
 
 	oldStatus := enrollment.Status
@@ -95,7 +99,7 @@ func (uc *EnrollmentUseCase) UpdateEnrollmentStatus(ctx context.Context, student
 	enrollment.UpdatedAt = time.Now()
 
 	if err := uc.enrollmentRepo.Update(ctx, enrollment); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create audit log
@@ -104,13 +108,13 @@ func (uc *EnrollmentUseCase) UpdateEnrollmentStatus(ctx context.Context, student
 	auditLog, _ := entity.NewAuditLog(entity.AuditActionEnrollmentUpdated, courseID, "enrollment", payloadBefore, payloadAfter, &userID)
 	uc.auditLogRepo.Create(ctx, auditLog)
 
-	return nil
+	return enrollment, nil
 }
 
-func (uc *EnrollmentUseCase) DropEnrollment(ctx context.Context, studentID, courseID, userID uuid.UUID) error {
+func (uc *EnrollmentUseCase) DropEnrollment(ctx context.Context, studentID, courseID, userID uuid.UUID) (*entity.Enrollment, error) {
 	return uc.UpdateEnrollmentStatus(ctx, studentID, courseID, entity.EnrollmentStatusDropped, userID)
 }
 
-func (uc *EnrollmentUseCase) CompleteEnrollment(ctx context.Context, studentID, courseID, userID uuid.UUID) error {
+func (uc *EnrollmentUseCase) CompleteEnrollment(ctx context.Context, studentID, courseID, userID uuid.UUID) (*entity.Enrollment, error) {
 	return uc.UpdateEnrollmentStatus(ctx, studentID, courseID, entity.EnrollmentStatusCompleted, userID)
 }

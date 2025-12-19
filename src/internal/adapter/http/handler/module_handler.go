@@ -19,22 +19,22 @@ func NewModuleHandler(moduleUseCase *usecase.ModuleUseCase) *ModuleHandler {
 	return &ModuleHandler{moduleUseCase: moduleUseCase}
 }
 
+// CreateModule godoc
+// @Summary Create a new module
+// @Description Create a new module for a course (instructor only)
+// @Tags Modules
+// @Accept json
+// @Produce json
+// @Param courseId path string true "Course ID"
+// @Param request body dto.CreateModuleRequest true "Module details"
+// @Success 201 {object} dto.SuccessResponse{data=dto.ModuleDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /courses/{courseId}/modules [post]
 func (h *ModuleHandler) CreateModule(w http.ResponseWriter, r *http.Request) {
-	// CreateModule godoc
-	// @Summary Create a new module
-	// @Description Create a new module for a course (instructor only)
-	// @Tags Modules
-	// @Accept json
-	// @Produce json
-	// @Param courseId path string true "Course ID"
-	// @Param request body dto.CreateModuleRequest true "Module details"
-	// @Success 201 {object} dto.SuccessResponse{data=dto.ModuleDTO}
-	// @Failure 400 {object} dto.ErrorResponse
-	// @Failure 403 {object} dto.ErrorResponse
-	// @Failure 404 {object} dto.ErrorResponse
-	// @Failure 500 {object} dto.ErrorResponse
-	// @Security BearerAuth
-	// @Router /courses/{courseId}/modules [post]
 	vars := mux.Vars(r)
 	courseID, err := uuid.Parse(vars["courseId"])
 	if err != nil {
@@ -77,19 +77,19 @@ func (h *ModuleHandler) CreateModule(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, response)
 }
 
+// GetCourseModules godoc
+// @Summary Get course modules
+// @Description Get all modules for a course
+// @Tags Modules
+// @Accept json
+// @Produce json
+// @Param courseId path string true "Course ID"
+// @Success 200 {object} dto.SuccessResponse{data=[]dto.ModuleDTO}
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /courses/{courseId}/modules [get]
 func (h *ModuleHandler) GetCourseModules(w http.ResponseWriter, r *http.Request) {
-	// GetCourseModules godoc
-	// @Summary Get course modules
-	// @Description Get all modules for a course
-	// @Tags Modules
-	// @Accept json
-	// @Produce json
-	// @Param courseId path string true "Course ID"
-	// @Success 200 {object} dto.SuccessResponse{data=[]dto.ModuleDTO}
-	// @Failure 404 {object} dto.ErrorResponse
-	// @Failure 500 {object} dto.ErrorResponse
-	// @Security BearerAuth
-	// @Router /courses/{courseId}/modules [get]
 	vars := mux.Vars(r)
 	courseID, err := uuid.Parse(vars["courseId"])
 	if err != nil {
@@ -118,19 +118,19 @@ func (h *ModuleHandler) GetCourseModules(w http.ResponseWriter, r *http.Request)
 	respondWithJSON(w, http.StatusOK, response)
 }
 
+// GetModule godoc
+// @Summary Get module
+// @Description Get a module by ID
+// @Tags Modules
+// @Accept json
+// @Produce json
+// @Param id path string true "Module ID"
+// @Success 200 {object} dto.SuccessResponse{data=dto.ModuleDTO}
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /modules/{id} [get]
 func (h *ModuleHandler) GetModule(w http.ResponseWriter, r *http.Request) {
-	// GetModule godoc
-	// @Summary Get module
-	// @Description Get a module by ID
-	// @Tags Modules
-	// @Accept json
-	// @Produce json
-	// @Param id path string true "Module ID"
-	// @Success 200 {object} dto.SuccessResponse{data=dto.ModuleDTO}
-	// @Failure 404 {object} dto.ErrorResponse
-	// @Failure 500 {object} dto.ErrorResponse
-	// @Security BearerAuth
-	// @Router /modules/{id} [get]
 	vars := mux.Vars(r)
 	moduleID, err := uuid.Parse(vars["id"])
 	if err != nil {
@@ -156,22 +156,22 @@ func (h *ModuleHandler) GetModule(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, response)
 }
 
+// UpdateModule godoc
+// @Summary Update module
+// @Description Update module details (instructor only)
+// @Tags Modules
+// @Accept json
+// @Produce json
+// @Param id path string true "Module ID"
+// @Param request body dto.UpdateModuleRequest true "Module update details"
+// @Success 200 {object} dto.SuccessResponse{data=dto.ModuleDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /modules/{id} [put]
 func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
-	// UpdateModule godoc
-	// @Summary Update module
-	// @Description Update module details (instructor only)
-	// @Tags Modules
-	// @Accept json
-	// @Produce json
-	// @Param id path string true "Module ID"
-	// @Param request body dto.UpdateModuleRequest true "Module update details"
-	// @Success 200 {object} dto.SuccessResponse{data=dto.ModuleDTO}
-	// @Failure 400 {object} dto.ErrorResponse
-	// @Failure 403 {object} dto.ErrorResponse
-	// @Failure 404 {object} dto.ErrorResponse
-	// @Failure 500 {object} dto.ErrorResponse
-	// @Security BearerAuth
-	// @Router /modules/{id} [put]
 	vars := mux.Vars(r)
 	moduleID, err := uuid.Parse(vars["id"])
 	if err != nil {
@@ -221,20 +221,20 @@ func (h *ModuleHandler) UpdateModule(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, response)
 }
 
+// DeleteModule godoc
+// @Summary Delete module
+// @Description Delete a module (instructor only)
+// @Tags Modules
+// @Accept json
+// @Produce json
+// @Param id path string true "Module ID"
+// @Success 204
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /modules/{id} [delete]
 func (h *ModuleHandler) DeleteModule(w http.ResponseWriter, r *http.Request) {
-	// DeleteModule godoc
-	// @Summary Delete module
-	// @Description Delete a module (instructor only)
-	// @Tags Modules
-	// @Accept json
-	// @Produce json
-	// @Param id path string true "Module ID"
-	// @Success 204
-	// @Failure 403 {object} dto.ErrorResponse
-	// @Failure 404 {object} dto.ErrorResponse
-	// @Failure 500 {object} dto.ErrorResponse
-	// @Security BearerAuth
-	// @Router /modules/{id} [delete]
 	vars := mux.Vars(r)
 	moduleID, err := uuid.Parse(vars["id"])
 	if err != nil {

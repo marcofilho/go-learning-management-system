@@ -20,23 +20,21 @@ func NewEnrollmentHandler(enrollmentUseCase *usecase.EnrollmentUseCase) *Enrollm
 	return &EnrollmentHandler{enrollmentUseCase: enrollmentUseCase}
 }
 
-// POST /api/courses/{id}/enroll
-
+// EnrollInCourse godoc
+// @Summary Enroll in a course
+// @Description Enroll a student in a course
+// @Tags Enrollments
+// @Accept json
+// @Produce json
+// @Param id path string true "Course ID"
+// @Success 201 {object} dto.SuccessResponse{data=dto.EnrollmentDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /courses/{id}/enroll [post]
 func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Request) {
-	// EnrollInCourse godoc
-	// @Summary Enroll in a course
-	// @Description Enroll a student in a course
-	// @Tags Enrollments
-	// @Accept json
-	// @Produce json
-	// @Param id path string true "Course ID"
-	// @Success 201 {object} dto.SuccessResponse{data=dto.EnrollmentDTO}
-	// @Failure 400 {object} dto.ErrorResponse
-	// @Failure 404 {object} dto.ErrorResponse
-	// @Failure 409 {object} dto.ErrorResponse
-	// @Failure 500 {object} dto.ErrorResponse
-	// @Security BearerAuth
-	// @Router /courses/{id}/enroll [post]
 	vars := mux.Vars(r)
 	courseID, err := uuid.Parse(vars["id"])
 	if err != nil {
@@ -76,22 +74,20 @@ func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Reques
 	respondWithJSON(w, http.StatusCreated, MapEntityToEnrollmentDTO(enrollment))
 }
 
-// GET /api/students/{id}/courses
-
+// GetStudentCourses godoc
+// @Summary Get student courses
+// @Description Get all courses a student is enrolled in
+// @Tags Enrollments
+// @Accept json
+// @Produce json
+// @Param id path string true "Student ID"
+// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
+// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /students/{id}/courses [get]
 func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Request) {
-	// GetStudentCourses godoc
-	// @Summary Get student courses
-	// @Description Get all courses a student is enrolled in
-	// @Tags Enrollments
-	// @Accept json
-	// @Produce json
-	// @Param id path string true "Student ID"
-	// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
-	// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
-	// @Failure 404 {object} dto.ErrorResponse
-	// @Failure 500 {object} dto.ErrorResponse
-	// @Security BearerAuth
-	// @Router /students/{id}/courses [get]
 	vars := mux.Vars(r)
 	studentID, err := uuid.Parse(vars["id"])
 	if err != nil {
@@ -118,22 +114,20 @@ func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Req
 	})
 }
 
-// GET /api/courses/{id}/students
-
+// GetCourseStudents godoc
+// @Summary Get course students
+// @Description Get all students enrolled in a course
+// @Tags Enrollments
+// @Accept json
+// @Produce json
+// @Param id path string true "Course ID"
+// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
+// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /courses/{id}/students [get]
 func (h *EnrollmentHandler) GetCourseStudents(w http.ResponseWriter, r *http.Request) {
-	// GetCourseStudents godoc
-	// @Summary Get course students
-	// @Description Get all students enrolled in a course
-	// @Tags Enrollments
-	// @Accept json
-	// @Produce json
-	// @Param id path string true "Course ID"
-	// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
-	// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
-	// @Failure 404 {object} dto.ErrorResponse
-	// @Failure 500 {object} dto.ErrorResponse
-	// @Security BearerAuth
-	// @Router /courses/{id}/students [get]
 	vars := mux.Vars(r)
 	courseID, err := uuid.Parse(vars["id"])
 	if err != nil {
@@ -158,6 +152,113 @@ func (h *EnrollmentHandler) GetCourseStudents(w http.ResponseWriter, r *http.Req
 		Data:       response,
 		Pagination: buildPagination(pg.page, pg.pageSize, total),
 	})
+}
+
+// UpdateEnrollmentStatus godoc
+// @Summary Update enrollment status
+// @Description Update the status of an enrollment (student can update own, admin can update any)
+// @Tags Enrollments
+// @Accept json
+// @Produce json
+// @Param courseId path string true "Course ID"
+// @Param request body dto.UpdateEnrollmentStatusRequest true "Update enrollment status request"
+// @Success 200 {object} dto.SuccessResponse{data=dto.EnrollmentDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /enrollments/{courseId}/status [put]
+func (h *EnrollmentHandler) UpdateEnrollmentStatus(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	courseID, err := uuid.Parse(vars["courseId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
+
+	userID, ok := GetUserIDFromContext(r)
+	if !ok {
+		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req dto.UpdateEnrollmentStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	// Determine student ID: use provided student_id or default to current user (for self-updates)
+	studentID := userID
+	if req.StudentID != "" {
+		parsedStudentID, err := uuid.Parse(req.StudentID)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid student ID format")
+			return
+		}
+		studentID = parsedStudentID
+	}
+
+	status := entity.EnrollmentStatus(req.Status)
+
+	updatedEnrollment, err := h.enrollmentUseCase.UpdateEnrollmentStatus(r.Context(), studentID, courseID, status, userID)
+	if err != nil {
+		handleUseCaseError(w, err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, MapEntityToEnrollmentDTO(updatedEnrollment))
+}
+
+// DropEnrollment godoc
+// @Summary Drop enrollment
+// @Description Drop an enrollment (set status to dropped). Student can drop own, admin can drop any.
+// @Tags Enrollments
+// @Accept json
+// @Produce json
+// @Param courseId path string true "Course ID"
+// @Success 200 {object} dto.SuccessResponse{data=dto.EnrollmentDTO}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /enrollments/{courseId} [delete]
+func (h *EnrollmentHandler) DropEnrollment(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	courseID, err := uuid.Parse(vars["courseId"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid course ID format")
+		return
+	}
+
+	userID, ok := GetUserIDFromContext(r)
+	if !ok {
+		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// For DELETE, we could accept student_id in body, but for simplicity,
+	// we'll use current user as default (matches typical self-drop pattern)
+	// Admin can still drop by using the enrollment update endpoint with status=dropped
+	studentID := userID
+
+	// Optionally accept student_id in query param for admin use
+	if studentIDParam := r.URL.Query().Get("student_id"); studentIDParam != "" {
+		parsedStudentID, err := uuid.Parse(studentIDParam)
+		if err == nil {
+			studentID = parsedStudentID
+		}
+	}
+
+	updatedEnrollment, err := h.enrollmentUseCase.DropEnrollment(r.Context(), studentID, courseID, userID)
+	if err != nil {
+		handleUseCaseError(w, err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, MapEntityToEnrollmentDTO(updatedEnrollment))
 }
 
 func parseEnrollmentFilter(r *http.Request, pg paginationParams) *repository.EnrollmentFilter {

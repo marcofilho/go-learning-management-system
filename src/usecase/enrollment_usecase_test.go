@@ -161,12 +161,16 @@ func TestEnrollmentUseCase_UpdateEnrollmentStatus(t *testing.T) {
 	uc := NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
 
 	mockUserRepo.On("GetByID", mock.Anything, admin.ID).Return(admin, nil)
+	enrollmentCopy := *enrollment
+	enrollmentCopy.Status = entity.EnrollmentStatusCompleted
 	mockEnrollRepo.On("GetByStudentAndCourse", mock.Anything, enrollment.StudentID, enrollment.CourseID).Return(enrollment, nil)
 	mockEnrollRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Enrollment")).Return(nil)
 	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
-	err := uc.UpdateEnrollmentStatus(context.Background(), enrollment.StudentID, enrollment.CourseID, entity.EnrollmentStatusCompleted, admin.ID)
+	updatedEnrollment, err := uc.UpdateEnrollmentStatus(context.Background(), enrollment.StudentID, enrollment.CourseID, entity.EnrollmentStatusCompleted, admin.ID)
 	require.NoError(t, err)
+	require.NotNil(t, updatedEnrollment)
+	require.Equal(t, entity.EnrollmentStatusCompleted, updatedEnrollment.Status)
 
 	mockEnrollRepo.AssertExpectations(t)
 	mockUserRepo.AssertExpectations(t)
@@ -194,8 +198,10 @@ func TestEnrollmentUseCase_DropEnrollment(t *testing.T) {
 	mockEnrollRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Enrollment")).Return(nil)
 	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
-	err := uc.DropEnrollment(context.Background(), enrollment.StudentID, enrollment.CourseID, admin.ID)
+	updatedEnrollment, err := uc.DropEnrollment(context.Background(), enrollment.StudentID, enrollment.CourseID, admin.ID)
 	require.NoError(t, err)
+	require.NotNil(t, updatedEnrollment)
+	require.Equal(t, entity.EnrollmentStatusDropped, updatedEnrollment.Status)
 
 	mockEnrollRepo.AssertExpectations(t)
 	mockUserRepo.AssertExpectations(t)
@@ -223,8 +229,10 @@ func TestEnrollmentUseCase_CompleteEnrollment(t *testing.T) {
 	mockEnrollRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Enrollment")).Return(nil)
 	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
-	err := uc.CompleteEnrollment(context.Background(), enrollment.StudentID, enrollment.CourseID, admin.ID)
+	updatedEnrollment, err := uc.CompleteEnrollment(context.Background(), enrollment.StudentID, enrollment.CourseID, admin.ID)
 	require.NoError(t, err)
+	require.NotNil(t, updatedEnrollment)
+	require.Equal(t, entity.EnrollmentStatusCompleted, updatedEnrollment.Status)
 
 	mockEnrollRepo.AssertExpectations(t)
 	mockUserRepo.AssertExpectations(t)
