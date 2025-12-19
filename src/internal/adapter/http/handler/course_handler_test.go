@@ -59,6 +59,98 @@ func TestCourseHandler_CreateCourse_Success(t *testing.T) {
 	mockUserRepo.AssertExpectations(t)
 }
 
+func TestCourseHandler_CreateCourse_Unauthorized(t *testing.T) {
+	mockCourseRepo := new(MockCourseRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewCourseHandler(courseUC)
+
+	reqBody := dto.CreateCourseRequest{Title: "Course", Description: "Desc"}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/courses", bytes.NewBuffer(body))
+
+	rr := httptest.NewRecorder()
+	handler.CreateCourse(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+}
+
+func TestCourseHandler_CreateCourse_InvalidJSON(t *testing.T) {
+	mockCourseRepo := new(MockCourseRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewCourseHandler(courseUC)
+
+	userID := uuid.New()
+	req := httptest.NewRequest(http.MethodPost, "/courses", bytes.NewBuffer([]byte("{invalid")))
+	claims := &auth.Claims{UserID: userID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateCourse(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestCourseHandler_CreateCourse_AdminInvalidInstructorID(t *testing.T) {
+	mockCourseRepo := new(MockCourseRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewCourseHandler(courseUC)
+
+	adminID := uuid.New()
+	reqBody := dto.CreateCourseRequest{Title: "Course", Description: "Desc", InstructorID: "not-a-uuid"}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/courses", bytes.NewBuffer(body))
+	claims := &auth.Claims{UserID: adminID, Email: "admin@example.com", Role: entity.UserRoleAdmin}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateCourse(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestCourseHandler_CreateCourse_InvalidDifficulty_MapsToBadRequest(t *testing.T) {
+	mockCourseRepo := new(MockCourseRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	courseUC := usecase.NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewCourseHandler(courseUC)
+
+	instructorID := uuid.New()
+	instructor, _ := entity.NewUser("inst@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
+	instructor.ID = instructorID
+
+	// user lookup ok
+	mockUserRepo.On("GetByID", mock.Anything, instructorID).Return(instructor, nil)
+
+	// entity.NewCourse will fail validation; due to current UC flow, Create is still invoked with nil
+	mockCourseRepo.On("Create", mock.Anything, mock.Anything).Return(entity.ErrInvalidInput)
+
+	reqBody := dto.CreateCourseRequest{Title: "Course", Description: "Desc", DifficultyLevel: "invalid-level"}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/courses", bytes.NewBuffer(body))
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateCourse(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	mockUserRepo.AssertExpectations(t)
+}
+
 func TestCourseHandler_CreateCourse_AdminForOtherInstructor_Success(t *testing.T) {
 	mockCourseRepo := new(MockCourseRepository)
 	mockUserRepo := new(MockUserRepository)

@@ -50,6 +50,127 @@ func TestModuleHandler_CreateModule_Success(t *testing.T) {
 	mockCourseRepo.AssertExpectations(t)
 }
 
+func TestModuleHandler_CreateModule_InvalidCourseID(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	handler := NewModuleHandler(moduleUC)
+
+	instructorID := uuid.New()
+	req := httptest.NewRequest(http.MethodPost, "/courses/invalid/modules", bytes.NewBuffer([]byte("{}")))
+	req = mux.SetURLVars(req, map[string]string{"courseId": "invalid"})
+
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateModule(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestModuleHandler_CreateModule_InvalidJSON(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	handler := NewModuleHandler(moduleUC)
+
+	courseID := uuid.New()
+	instructorID := uuid.New()
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID.String()+"/modules", bytes.NewBuffer([]byte("{invalid")))
+	req = mux.SetURLVars(req, map[string]string{"courseId": courseID.String()})
+
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateModule(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestModuleHandler_CreateModule_Unauthorized(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	handler := NewModuleHandler(moduleUC)
+
+	courseID := uuid.New()
+	reqBody := dto.CreateModuleRequest{Title: "M", OrderIndex: 0}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID.String()+"/modules", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"courseId": courseID.String()})
+
+	rr := httptest.NewRecorder()
+	handler.CreateModule(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+}
+
+func TestModuleHandler_CreateModule_Forbidden_NotInstructor(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	handler := NewModuleHandler(moduleUC)
+
+	courseID := uuid.New()
+	instructorID := uuid.New()
+	otherID := uuid.New()
+	course := &entity.Course{ID: courseID, InstructorID: instructorID}
+
+	// module validate OK path; then permission check fails
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
+
+	reqBody := dto.CreateModuleRequest{Title: "M", OrderIndex: 0}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID.String()+"/modules", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"courseId": courseID.String()})
+
+	claims := &auth.Claims{UserID: otherID, Email: "other@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateModule(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockCourseRepo.AssertExpectations(t)
+}
+
+func TestModuleHandler_CreateModule_CourseNotFound(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	handler := NewModuleHandler(moduleUC)
+
+	courseID := uuid.New()
+	instructorID := uuid.New()
+
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(nil, entity.ErrNotFound)
+
+	reqBody := dto.CreateModuleRequest{Title: "M", OrderIndex: 0}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID.String()+"/modules", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"courseId": courseID.String()})
+
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateModule(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	mockCourseRepo.AssertExpectations(t)
+}
+
 func TestModuleHandler_GetCourseModules_Success(t *testing.T) {
 	mockModuleRepo := new(MockModuleRepository)
 	mockCourseRepo := new(MockCourseRepository)

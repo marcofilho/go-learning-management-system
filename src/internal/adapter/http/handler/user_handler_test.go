@@ -310,6 +310,40 @@ func TestUserHandler_DeleteUser_Unauthorized(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+func TestUserHandler_DeleteUser_InvalidID(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	mockToken := new(MockTokenProvider)
+	userUC := usecase.NewUserUseCase(mockRepo, mockToken)
+	handler := NewUserHandler(userUC)
+
+	req := httptest.NewRequest(http.MethodDelete, "/users/invalid", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
+
+	rr := httptest.NewRecorder()
+	handler.DeleteUser(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestUserHandler_DeleteUser_InternalError(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	mockToken := new(MockTokenProvider)
+	userUC := usecase.NewUserUseCase(mockRepo, mockToken)
+	handler := NewUserHandler(userUC)
+
+	userID := uuid.New()
+	mockRepo.On("Delete", mock.Anything, userID).Return(entity.ErrInvalidInput)
+
+	req := httptest.NewRequest(http.MethodDelete, "/users/"+userID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"id": userID.String()})
+
+	rr := httptest.NewRecorder()
+	handler.DeleteUser(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	mockRepo.AssertExpectations(t)
+}
+
 func TestUserHandler_Register_InvalidJSON(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockToken := new(MockTokenProvider)

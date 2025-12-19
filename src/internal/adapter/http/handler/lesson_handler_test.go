@@ -62,6 +62,104 @@ func TestLessonHandler_CreateLesson_Success(t *testing.T) {
 	mockLessonRepo.AssertExpectations(t)
 }
 
+func TestLessonHandler_CreateLesson_InvalidModuleID(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	req := httptest.NewRequest(http.MethodPost, "/modules/invalid/lessons", bytes.NewBuffer([]byte("{}")))
+	req = mux.SetURLVars(req, map[string]string{"moduleId": "invalid"})
+
+	instructorID := uuid.New()
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateLesson(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestLessonHandler_CreateLesson_InvalidJSON(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	moduleID := uuid.New()
+	req := httptest.NewRequest(http.MethodPost, "/modules/"+moduleID.String()+"/lessons", bytes.NewBuffer([]byte("{invalid")))
+	req = mux.SetURLVars(req, map[string]string{"moduleId": moduleID.String()})
+
+	instructorID := uuid.New()
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateLesson(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestLessonHandler_CreateLesson_Unauthorized(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	moduleID := uuid.New()
+	reqBody := dto.CreateLessonRequest{Content: "c"}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/modules/"+moduleID.String()+"/lessons", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"moduleId": moduleID.String()})
+
+	rr := httptest.NewRecorder()
+	handler.CreateLesson(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+}
+
+func TestLessonHandler_CreateLesson_ModuleNotFound(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	moduleID := uuid.New()
+	instructorID := uuid.New()
+
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(nil, entity.ErrNotFound)
+
+	reqBody := dto.CreateLessonRequest{Content: "c"}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/modules/"+moduleID.String()+"/lessons", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"moduleId": moduleID.String()})
+
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateLesson(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+}
+
 func TestLessonHandler_GetModuleLessons_Success(t *testing.T) {
 	mockLessonRepo := new(MockLessonRepository)
 	mockModuleRepo := new(MockModuleRepository)
@@ -157,6 +255,123 @@ func TestLessonHandler_DeleteLesson_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusNoContent, rr.Code)
 	mockLessonRepo.AssertExpectations(t)
+}
+
+func TestLessonHandler_DeleteLesson_InvalidID(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	req := httptest.NewRequest(http.MethodDelete, "/lessons/invalid", nil)
+	req = mux.SetURLVars(req, map[string]string{"lessonId": "invalid"})
+
+	instructorID := uuid.New()
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.DeleteLesson(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestLessonHandler_DeleteLesson_Unauthorized(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	lessonID := uuid.New()
+	req := httptest.NewRequest(http.MethodDelete, "/lessons/"+lessonID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"lessonId": lessonID.String()})
+
+	rr := httptest.NewRecorder()
+	handler.DeleteLesson(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+}
+
+func TestLessonHandler_DeleteLesson_NotFound(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	lessonID := uuid.New()
+	instructorID := uuid.New()
+
+	mockLessonRepo.On("GetByID", mock.Anything, lessonID).Return(nil, entity.ErrNotFound)
+
+	req := httptest.NewRequest(http.MethodDelete, "/lessons/"+lessonID.String(), nil)
+	req = mux.SetURLVars(req, map[string]string{"lessonId": lessonID.String()})
+
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.DeleteLesson(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	mockLessonRepo.AssertExpectations(t)
+}
+
+func TestLessonHandler_CreateLessonVersion_InvalidLessonID(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	req := httptest.NewRequest(http.MethodPost, "/lessons/invalid/versions", bytes.NewBuffer([]byte("{}")))
+	req = mux.SetURLVars(req, map[string]string{"lessonId": "invalid"})
+
+	instructorID := uuid.New()
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateLessonVersion(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestLessonHandler_CreateLessonVersion_InvalidJSON(t *testing.T) {
+	mockLessonRepo := new(MockLessonRepository)
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	lessonUC := usecase.NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
+	handler := NewLessonHandler(lessonUC)
+
+	lessonID := uuid.New()
+	req := httptest.NewRequest(http.MethodPost, "/lessons/"+lessonID.String()+"/versions", bytes.NewBuffer([]byte("{invalid")))
+	req = mux.SetURLVars(req, map[string]string{"lessonId": lessonID.String()})
+
+	instructorID := uuid.New()
+	claims := &auth.Claims{UserID: instructorID, Email: "inst@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.CreateLessonVersion(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
 func TestLessonHandler_CreateLessonVersion_Success(t *testing.T) {

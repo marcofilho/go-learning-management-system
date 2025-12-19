@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/middleware"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/infrastructure/auth"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/usecase"
@@ -245,4 +246,54 @@ func TestEnrollmentHandler_GetCourseStudents_InvalidCourseID(t *testing.T) {
 	handler.GetCourseStudents(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestEnrollmentHandler_GetStudentCourses_DefaultLimitOffsetOnInvalidValues(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	studentID := uuid.New()
+	matcher := mock.MatchedBy(func(f *repository.EnrollmentFilter) bool {
+		return f.Limit == 10 && f.Offset == 0 && f.Status == nil && f.DateFrom == nil && f.DateTo == nil
+	})
+	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, matcher).Return([]*entity.Enrollment{}, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/students/"+studentID.String()+"/courses?limit=0&offset=-1", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": studentID.String()})
+	rr := httptest.NewRecorder()
+
+	handler.GetStudentCourses(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockEnrollRepo.AssertExpectations(t)
+}
+
+func TestEnrollmentHandler_GetCourseStudents_StatusOnlyFilter(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	courseID := uuid.New()
+	statusMatcher := mock.MatchedBy(func(f *repository.EnrollmentFilter) bool {
+		return f.Limit == 10 && f.Offset == 0 && f.Status != nil && *f.Status == entity.EnrollmentStatusActive && f.DateFrom == nil && f.DateTo == nil
+	})
+	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, statusMatcher).Return([]*entity.Enrollment{}, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String()+"/students?status=active", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
+	rr := httptest.NewRecorder()
+
+	handler.GetCourseStudents(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockEnrollRepo.AssertExpectations(t)
 }
