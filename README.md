@@ -240,19 +240,23 @@ Current schema version: **1** (initial_schema)
 
 ### Running Tests
 
-Unit tests are implemented for all layers of the application.
+Unit tests are implemented for all layers of the application. By default, repository adapter (Postgres) tests are excluded to keep CI fast and deterministic; run the integration sweep when you explicitly need it.
 
 ```bash
-# Run all tests
+# Run fast suite (excludes repository adapters)
 make test
-# or
+# equivalent
+go test -v -cover $(go list ./... | grep -v src/internal/infrastructure/repository)
+
+# Run everything (including repository adapters)
+make test-all
 go test -v -cover ./...
 
 # Run entity tests only
 go test ./src/internal/domain/entity -v
 
-# Run with coverage report
-go test ./... -cover -coverprofile=coverage.out
+# Run with coverage report (fast suite)
+go test -coverprofile=coverage.out $(go list ./... | grep -v src/internal/infrastructure/repository)
 go tool cover -html=coverage.out
 ```
 

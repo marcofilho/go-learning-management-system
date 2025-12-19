@@ -99,7 +99,15 @@ run:
 
 # Run tests
 test:
-	@echo "Running tests..."
+	@echo "Running tests (excluding repository adapters)..."
+	@pkgs=$$(go list ./... | grep -v src/internal/infrastructure/repository); \
+	go test -v -race -coverprofile=coverage.out $$pkgs; \
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report: coverage.html"
+
+# Run all packages (including repository adapters)
+test-all:
+	@echo "Running all tests (including repository adapters)..."
 	@go test -v -race -coverprofile=coverage.out ./...
 	@go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report: coverage.html"
