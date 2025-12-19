@@ -66,7 +66,7 @@ func SetupRoutes(
 
 	modules := api.PathPrefix("/modules").Subrouter()
 	modules.Use(middleware.AuthMiddleware(tokenProvider))
-	modules.HandleFunc("/{id}", moduleHandler.GetModule).Methods(http.MethodGet)
+	modules.Handle("/{id}", middleware.RequireModuleAccess(moduleRepo, courseRepo, enrollmentRepo)(http.HandlerFunc(moduleHandler.GetModule))).Methods(http.MethodGet)
 	modules.Handle("/{id}", middleware.RequireModuleOwnership(moduleRepo, courseRepo)(http.HandlerFunc(moduleHandler.UpdateModule))).Methods(http.MethodPut)
 	modules.Handle("/{id}", middleware.RequireModuleOwnership(moduleRepo, courseRepo)(http.HandlerFunc(moduleHandler.DeleteModule))).Methods(http.MethodDelete)
 

@@ -231,8 +231,13 @@ func RequireModuleAccess(moduleRepo repository.ModuleRepository, courseRepo repo
 				return
 			}
 
-			if claims.Role == entity.UserRoleInstructor && course.InstructorID == claims.UserID {
-				next.ServeHTTP(w, r)
+			if claims.Role == entity.UserRoleInstructor {
+				if course.InstructorID == claims.UserID {
+					next.ServeHTTP(w, r)
+					return
+				}
+				// Instructor doesn't own this course
+				respondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "You can only access content from your own courses")
 				return
 			}
 
@@ -242,9 +247,12 @@ func RequireModuleAccess(moduleRepo repository.ModuleRepository, courseRepo repo
 					respondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "You must be enrolled in this course to access its content")
 					return
 				}
+				next.ServeHTTP(w, r)
+				return
 			}
 
-			next.ServeHTTP(w, r)
+			// Unknown role or edge case
+			respondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "You do not have permission to access this resource")
 		})
 	}
 }
