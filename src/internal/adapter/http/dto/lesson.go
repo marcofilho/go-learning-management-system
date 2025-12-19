@@ -4,6 +4,7 @@ import "time"
 
 type LessonVersionDTO struct {
 	ID            string    `json:"id"`
+	LessonID      string    `json:"lesson_id"`
 	ModuleID      string    `json:"module_id"`
 	VersionNumber int       `json:"version_number"`
 	Content       string    `json:"content"`

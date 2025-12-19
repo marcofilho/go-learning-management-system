@@ -47,7 +47,7 @@ func (uc *CourseUseCase) GetCourseByID(ctx context.Context, id uuid.UUID) (*enti
 	return uc.courseRepo.GetByID(ctx, id)
 }
 
-func (uc *CourseUseCase) ListCourses(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, error) {
+func (uc *CourseUseCase) ListCourses(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, int64, error) {
 	return uc.courseRepo.List(ctx, filter)
 }
 

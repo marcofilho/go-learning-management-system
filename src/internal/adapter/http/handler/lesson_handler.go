@@ -68,6 +68,7 @@ func (h *LessonHandler) CreateLesson(w http.ResponseWriter, r *http.Request) {
 
 	response := dto.LessonVersionDTO{
 		ID:            lesson.ID.String(),
+		LessonID:      lesson.LessonID.String(),
 		ModuleID:      lesson.ModuleID.String(),
 		VersionNumber: lesson.VersionNumber,
 		Content:       lesson.Content,
@@ -142,6 +143,7 @@ func (h *LessonHandler) CreateLessonVersion(w http.ResponseWriter, r *http.Reque
 
 	response := dto.LessonVersionDTO{
 		ID:            newVersion.ID.String(),
+		LessonID:      newVersion.LessonID.String(),
 		ModuleID:      newVersion.ModuleID.String(),
 		VersionNumber: newVersion.VersionNumber,
 		Content:       newVersion.Content,
@@ -173,7 +175,8 @@ func (h *LessonHandler) GetModuleLessons(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	lessons, err := h.lessonUseCase.GetLatestLessonsByModule(r.Context(), moduleID)
+	pg := parsePagination(r)
+	lessons, total, err := h.lessonUseCase.GetLatestLessonsByModule(r.Context(), moduleID, pg.limit, pg.offset)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -192,7 +195,10 @@ func (h *LessonHandler) GetModuleLessons(w http.ResponseWriter, r *http.Request)
 		})
 	}
 
-	respondWithJSON(w, http.StatusOK, response)
+	respondWithJSON(w, http.StatusOK, paginatedResponse{
+		Data:       response,
+		Pagination: buildPagination(pg.page, pg.pageSize, total),
+	})
 }
 
 func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Request) {
@@ -215,7 +221,8 @@ func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	versions, err := h.lessonUseCase.GetAllLessonVersions(r.Context(), lessonID)
+	pg := parsePagination(r)
+	versions, total, err := h.lessonUseCase.GetAllLessonVersions(r.Context(), lessonID, pg.limit, pg.offset)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -225,6 +232,7 @@ func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Requ
 	for _, version := range versions {
 		response = append(response, dto.LessonVersionDTO{
 			ID:            version.ID.String(),
+			LessonID:      version.LessonID.String(),
 			ModuleID:      version.ModuleID.String(),
 			VersionNumber: version.VersionNumber,
 			Content:       version.Content,
@@ -234,7 +242,10 @@ func (h *LessonHandler) GetAllLessonVersions(w http.ResponseWriter, r *http.Requ
 		})
 	}
 
-	respondWithJSON(w, http.StatusOK, response)
+	respondWithJSON(w, http.StatusOK, paginatedResponse{
+		Data:       response,
+		Pagination: buildPagination(pg.page, pg.pageSize, total),
+	})
 }
 
 func (h *LessonHandler) DeleteLesson(w http.ResponseWriter, r *http.Request) {

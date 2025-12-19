@@ -146,7 +146,7 @@ func TestEnrollmentHandler_GetStudentCourses_Success(t *testing.T) {
 		{StudentID: studentID, CourseID: uuid.New(), Status: entity.EnrollmentStatusActive},
 	}
 
-	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
+	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, int64(len(enrollments)), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/students/"+studentID.String()+"/courses", nil)
 	req = mux.SetURLVars(req, map[string]string{"id": studentID.String()})
@@ -172,7 +172,7 @@ func TestEnrollmentHandler_GetStudentCourses_WithFilters(t *testing.T) {
 		{StudentID: studentID, CourseID: uuid.New(), Status: entity.EnrollmentStatusActive},
 	}
 
-	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
+	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, int64(len(enrollments)), nil)
 
 	url := "/students/" + studentID.String() + "/courses?status=active&date_from=2025-01-01&date_to=2025-12-31&limit=5&offset=2"
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -218,7 +218,7 @@ func TestEnrollmentHandler_GetCourseStudents_Success(t *testing.T) {
 		{StudentID: uuid.New(), CourseID: courseID, Status: entity.EnrollmentStatusActive},
 	}
 
-	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
+	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, int64(len(enrollments)), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String()+"/students", nil)
 	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
@@ -261,7 +261,7 @@ func TestEnrollmentHandler_GetStudentCourses_DefaultLimitOffsetOnInvalidValues(t
 	matcher := mock.MatchedBy(func(f *repository.EnrollmentFilter) bool {
 		return f.Limit == 10 && f.Offset == 0 && f.Status == nil && f.DateFrom == nil && f.DateTo == nil
 	})
-	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, matcher).Return([]*entity.Enrollment{}, nil)
+	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, matcher).Return([]*entity.Enrollment{}, int64(0), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/students/"+studentID.String()+"/courses?limit=0&offset=-1", nil)
 	req = mux.SetURLVars(req, map[string]string{"id": studentID.String()})
@@ -286,7 +286,7 @@ func TestEnrollmentHandler_GetCourseStudents_StatusOnlyFilter(t *testing.T) {
 	statusMatcher := mock.MatchedBy(func(f *repository.EnrollmentFilter) bool {
 		return f.Limit == 10 && f.Offset == 0 && f.Status != nil && *f.Status == entity.EnrollmentStatusActive && f.DateFrom == nil && f.DateTo == nil
 	})
-	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, statusMatcher).Return([]*entity.Enrollment{}, nil)
+	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, statusMatcher).Return([]*entity.Enrollment{}, int64(0), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/courses/"+courseID.String()+"/students?status=active", nil)
 	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})

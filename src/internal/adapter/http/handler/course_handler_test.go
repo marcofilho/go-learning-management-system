@@ -229,7 +229,7 @@ func TestCourseHandler_ListCourses_WithFilters(t *testing.T) {
 		{ID: uuid.New(), Title: "Course 1", InstructorID: instructorID, DifficultyLevel: entity.DifficultyLevelIntermediate},
 	}
 
-	mockCourseRepo.On("List", mock.Anything, mock.AnythingOfType("*repository.CourseFilter")).Return(courses, nil)
+	mockCourseRepo.On("List", mock.Anything, mock.AnythingOfType("*repository.CourseFilter")).Return(courses, int64(len(courses)), nil)
 
 	url := "/courses?instructor_id=" + instructorID.String() + "&difficulty_level=intermediate&active_only=true&limit=5&offset=10"
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -304,7 +304,7 @@ func TestCourseHandler_ListCourses_Success(t *testing.T) {
 		{ID: uuid.New(), Title: "Course 2"},
 	}
 
-	mockCourseRepo.On("List", mock.Anything, mock.AnythingOfType("*repository.CourseFilter")).Return(courses, nil)
+	mockCourseRepo.On("List", mock.Anything, mock.AnythingOfType("*repository.CourseFilter")).Return(courses, int64(len(courses)), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/courses", nil)
 	rr := httptest.NewRecorder()

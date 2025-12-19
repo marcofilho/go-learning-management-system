@@ -110,13 +110,14 @@ func TestEnrollmentUseCase_GetStudentCourses(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockAuditRepo := new(MockAuditLogRepository)
 
-	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
+	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, int64(len(enrollments)), nil)
 
 	uc := NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
-	result, err := uc.GetStudentCourses(context.Background(), studentID, nil)
+	result, total, err := uc.GetStudentCourses(context.Background(), studentID, nil)
 
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
+	assert.Equal(t, int64(len(enrollments)), total)
 	mockEnrollRepo.AssertExpectations(t)
 }
 
@@ -132,13 +133,14 @@ func TestEnrollmentUseCase_GetCourseStudents(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockAuditRepo := new(MockAuditLogRepository)
 
-	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
+	mockEnrollRepo.On("GetByCourse", mock.Anything, courseID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, int64(len(enrollments)), nil)
 
 	uc := NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
-	result, err := uc.GetCourseStudents(context.Background(), courseID, nil)
+	result, total, err := uc.GetCourseStudents(context.Background(), courseID, nil)
 
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
+	assert.Equal(t, int64(len(enrollments)), total)
 	mockEnrollRepo.AssertExpectations(t)
 }
 

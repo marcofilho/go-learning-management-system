@@ -40,9 +40,9 @@ func (r *PostgresCourseRepository) Delete(ctx context.Context, id uuid.UUID) err
 	return r.db.WithContext(ctx).Delete(&entity.Course{}, "id = ?", id).Error
 }
 
-func (r *PostgresCourseRepository) List(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, error) {
+func (r *PostgresCourseRepository) List(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, int64, error) {
 	var courses []*entity.Course
-	query := r.db.WithContext(ctx)
+	query := r.db.WithContext(ctx).Model(&entity.Course{})
 
 	// Apply filters
 	if filter.InstructorID != nil {
@@ -65,10 +65,15 @@ func (r *PostgresCourseRepository) List(ctx context.Context, filter *repository.
 		query = query.Offset(filter.Offset)
 	}
 
-	if err := query.Order("created_at DESC").Find(&courses).Error; err != nil {
-		return nil, err
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return courses, nil
+
+	if err := query.Order("created_at DESC").Find(&courses).Error; err != nil {
+		return nil, 0, err
+	}
+	return courses, total, nil
 }
 
 func (r *PostgresCourseRepository) GetByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error) {

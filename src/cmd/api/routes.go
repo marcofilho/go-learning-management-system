@@ -20,6 +20,7 @@ func SetupRoutes(
 	enrollmentHandler *handler.EnrollmentHandler,
 	moduleHandler *handler.ModuleHandler,
 	lessonHandler *handler.LessonHandler,
+	auditLogHandler *handler.AuditLogHandler,
 	certificationWebhookHandler *handler.CertificationWebhookHandler,
 	tokenProvider auth.TokenProvider,
 	courseRepo repository.CourseRepository,
@@ -69,7 +70,7 @@ func SetupRoutes(
 	modules.Handle("/{id}", middleware.RequireModuleOwnership(moduleRepo, courseRepo)(http.HandlerFunc(moduleHandler.DeleteModule))).Methods(http.MethodDelete)
 
 	modules.Handle("/{moduleId}/lessons", middleware.RequireModuleOwnership(moduleRepo, courseRepo)(http.HandlerFunc(lessonHandler.CreateLesson))).Methods(http.MethodPost)
-	modules.HandleFunc("/{moduleId}/lessons", lessonHandler.GetModuleLessons).Methods(http.MethodGet)
+	modules.Handle("/{moduleId}/lessons", middleware.RequireModuleAccess(moduleRepo, courseRepo, enrollmentRepo)(http.HandlerFunc(lessonHandler.GetModuleLessons))).Methods(http.MethodGet)
 
 	lessons := api.PathPrefix("/lessons").Subrouter()
 	lessons.Use(middleware.AuthMiddleware(tokenProvider))
@@ -80,6 +81,10 @@ func SetupRoutes(
 	students := api.PathPrefix("/students").Subrouter()
 	students.Use(middleware.AuthMiddleware(tokenProvider))
 	students.Handle("/{id}/courses", middleware.RequireAdminOrSelf()(http.HandlerFunc(enrollmentHandler.GetStudentCourses))).Methods(http.MethodGet)
+
+	auditLogs := api.PathPrefix("/audit-logs").Subrouter()
+	auditLogs.Use(middleware.AuthMiddleware(tokenProvider))
+	auditLogs.Handle("", middleware.RequireRole(entity.UserRoleAdmin)(http.HandlerFunc(auditLogHandler.ListAuditLogs))).Methods(http.MethodGet)
 
 	return r
 }

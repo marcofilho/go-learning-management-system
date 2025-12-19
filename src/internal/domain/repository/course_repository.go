@@ -20,6 +20,6 @@ type CourseRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*entity.Course, error)
 	Update(ctx context.Context, course *entity.Course) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	List(ctx context.Context, filter *CourseFilter) ([]*entity.Course, error)
+	List(ctx context.Context, filter *CourseFilter) ([]*entity.Course, int64, error)
 	GetByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error)
 }

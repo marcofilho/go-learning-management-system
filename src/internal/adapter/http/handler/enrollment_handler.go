@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -100,8 +99,9 @@ func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	filter := parseEnrollmentFilter(r)
-	enrollments, err := h.enrollmentUseCase.GetStudentCourses(r.Context(), studentID, filter)
+	pg := parsePagination(r)
+	filter := parseEnrollmentFilter(r, pg)
+	enrollments, total, err := h.enrollmentUseCase.GetStudentCourses(r.Context(), studentID, filter)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -112,7 +112,10 @@ func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Req
 		response = append(response, MapEntityToEnrollmentDTO(enrollment))
 	}
 
-	respondWithJSON(w, http.StatusOK, response)
+	respondWithJSON(w, http.StatusOK, paginatedResponse{
+		Data:       response,
+		Pagination: buildPagination(pg.page, pg.pageSize, total),
+	})
 }
 
 // GET /api/courses/{id}/students
@@ -138,8 +141,9 @@ func (h *EnrollmentHandler) GetCourseStudents(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	filter := parseEnrollmentFilter(r)
-	enrollments, err := h.enrollmentUseCase.GetCourseStudents(r.Context(), courseID, filter)
+	pg := parsePagination(r)
+	filter := parseEnrollmentFilter(r, pg)
+	enrollments, total, err := h.enrollmentUseCase.GetCourseStudents(r.Context(), courseID, filter)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -150,13 +154,16 @@ func (h *EnrollmentHandler) GetCourseStudents(w http.ResponseWriter, r *http.Req
 		response = append(response, MapEntityToEnrollmentDTO(enrollment))
 	}
 
-	respondWithJSON(w, http.StatusOK, response)
+	respondWithJSON(w, http.StatusOK, paginatedResponse{
+		Data:       response,
+		Pagination: buildPagination(pg.page, pg.pageSize, total),
+	})
 }
 
-func parseEnrollmentFilter(r *http.Request) *repository.EnrollmentFilter {
+func parseEnrollmentFilter(r *http.Request, pg paginationParams) *repository.EnrollmentFilter {
 	filter := &repository.EnrollmentFilter{
-		Limit:  10,
-		Offset: 0,
+		Limit:  pg.limit,
+		Offset: pg.offset,
 	}
 
 	if status := r.URL.Query().Get("status"); status != "" {
@@ -170,18 +177,6 @@ func parseEnrollmentFilter(r *http.Request) *repository.EnrollmentFilter {
 
 	if dateTo := r.URL.Query().Get("date_to"); dateTo != "" {
 		filter.DateTo = &dateTo
-	}
-
-	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
-			filter.Limit = l
-		}
-	}
-
-	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
-		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
-			filter.Offset = o
-		}
 	}
 
 	return filter

@@ -45,32 +45,42 @@ func (r *PostgresEnrollmentRepository) Delete(ctx context.Context, studentID, co
 		Delete(&entity.Enrollment{}).Error
 }
 
-func (r *PostgresEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (r *PostgresEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	var enrollments []*entity.Enrollment
-	query := r.db.WithContext(ctx).Where("student_id = ?", studentID)
+	query := r.db.WithContext(ctx).Model(&entity.Enrollment{}).Where("student_id = ?", studentID)
 
 	if filter != nil {
 		query = r.applyFilters(query, filter)
 	}
 
-	if err := query.Order("enrollment_date DESC").Find(&enrollments).Error; err != nil {
-		return nil, err
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return enrollments, nil
+
+	if err := query.Order("enrollment_date DESC").Find(&enrollments).Error; err != nil {
+		return nil, 0, err
+	}
+	return enrollments, total, nil
 }
 
-func (r *PostgresEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (r *PostgresEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	var enrollments []*entity.Enrollment
-	query := r.db.WithContext(ctx).Where("course_id = ?", courseID)
+	query := r.db.WithContext(ctx).Model(&entity.Enrollment{}).Where("course_id = ?", courseID)
 
 	if filter != nil {
 		query = r.applyFilters(query, filter)
 	}
 
-	if err := query.Order("enrollment_date DESC").Find(&enrollments).Error; err != nil {
-		return nil, err
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return enrollments, nil
+
+	if err := query.Order("enrollment_date DESC").Find(&enrollments).Error; err != nil {
+		return nil, 0, err
+	}
+	return enrollments, total, nil
 }
 
 func (r *PostgresEnrollmentRepository) applyFilters(query *gorm.DB, filter *repository.EnrollmentFilter) *gorm.DB {

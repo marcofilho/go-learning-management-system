@@ -15,12 +15,30 @@ type MockLessonRepository struct {
 	mock.Mock
 }
 
-func (m *MockLessonRepository) Create(ctx context.Context, lesson *entity.LessonVersion) error {
+func (m *MockLessonRepository) CreateLesson(ctx context.Context, lesson *entity.Lesson) error {
 	args := m.Called(ctx, lesson)
 	return args.Error(0)
 }
 
-func (m *MockLessonRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.LessonVersion, error) {
+func (m *MockLessonRepository) GetLessonByID(ctx context.Context, id uuid.UUID) (*entity.Lesson, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.Lesson), args.Error(1)
+}
+
+func (m *MockLessonRepository) DeleteLesson(ctx context.Context, lessonID uuid.UUID) error {
+	args := m.Called(ctx, lessonID)
+	return args.Error(0)
+}
+
+func (m *MockLessonRepository) CreateVersion(ctx context.Context, lesson *entity.LessonVersion) error {
+	args := m.Called(ctx, lesson)
+	return args.Error(0)
+}
+
+func (m *MockLessonRepository) GetVersionByID(ctx context.Context, id uuid.UUID) (*entity.LessonVersion, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -28,37 +46,29 @@ func (m *MockLessonRepository) GetByID(ctx context.Context, id uuid.UUID) (*enti
 	return args.Get(0).(*entity.LessonVersion), args.Error(1)
 }
 
-func (m *MockLessonRepository) GetByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
-	args := m.Called(ctx, moduleID)
+func (m *MockLessonRepository) GetLatestByModule(ctx context.Context, moduleID uuid.UUID, limit, offset int) ([]*entity.LessonVersion, int64, error) {
+	args := m.Called(ctx, moduleID, limit, offset)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
+	return args.Get(0).([]*entity.LessonVersion), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockLessonRepository) GetLatestByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
-	args := m.Called(ctx, moduleID)
+func (m *MockLessonRepository) GetAllVersions(ctx context.Context, lessonID uuid.UUID, limit, offset int) ([]*entity.LessonVersion, int64, error) {
+	args := m.Called(ctx, lessonID, limit, offset)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
+	return args.Get(0).([]*entity.LessonVersion), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockLessonRepository) GetNextVersionNumber(ctx context.Context, moduleID uuid.UUID) (int, error) {
-	args := m.Called(ctx, moduleID)
+func (m *MockLessonRepository) GetNextVersionNumber(ctx context.Context, lessonID uuid.UUID) (int, error) {
+	args := m.Called(ctx, lessonID)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockLessonRepository) GetAllVersions(ctx context.Context, lessonID uuid.UUID) ([]*entity.LessonVersion, error) {
+func (m *MockLessonRepository) DeleteVersionsByLesson(ctx context.Context, lessonID uuid.UUID) error {
 	args := m.Called(ctx, lessonID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
-}
-
-func (m *MockLessonRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
@@ -82,7 +92,8 @@ func TestLessonUseCase_CreateLesson(t *testing.T) {
 
 	mockModuleRepo.On("GetByID", mock.Anything, module.ID).Return(module, nil)
 	mockCourseRepo.On("GetByID", mock.Anything, course.ID).Return(course, nil)
-	mockLessonRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.LessonVersion")).Return(nil)
+	mockLessonRepo.On("CreateLesson", mock.Anything, mock.AnythingOfType("*entity.Lesson")).Return(nil)
+	mockLessonRepo.On("CreateVersion", mock.Anything, mock.AnythingOfType("*entity.LessonVersion")).Return(nil)
 	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
 	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
@@ -95,6 +106,7 @@ func TestLessonUseCase_CreateLesson(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, 1, lesson.VersionNumber)
+	assert.NotEqual(t, uuid.Nil, lesson.LessonID)
 	mockLessonRepo.AssertExpectations(t)
 	mockModuleRepo.AssertExpectations(t)
 	mockCourseRepo.AssertExpectations(t)
@@ -112,12 +124,8 @@ func TestLessonUseCase_CreateLessonVersion(t *testing.T) {
 		CourseID: course.ID,
 		Title:    "Module 1",
 	}
-	lesson := &entity.LessonVersion{
-		ID:            uuid.New(),
-		ModuleID:      module.ID,
-		VersionNumber: 1,
-		Content:       "Old Content",
-	}
+	lessonID := uuid.New()
+	baseLesson := &entity.Lesson{ID: lessonID, ModuleID: module.ID}
 
 	mockLessonRepo := new(MockLessonRepository)
 	mockModuleRepo := new(MockModuleRepository)
@@ -126,18 +134,18 @@ func TestLessonUseCase_CreateLessonVersion(t *testing.T) {
 
 	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 
-	mockLessonRepo.On("GetByID", mock.Anything, lesson.ID).Return(lesson, nil)
+	mockLessonRepo.On("GetLessonByID", mock.Anything, lessonID).Return(baseLesson, nil)
 	mockModuleRepo.On("GetByID", mock.Anything, module.ID).Return(module, nil)
 	mockCourseRepo.On("GetByID", mock.Anything, course.ID).Return(course, nil)
-	mockLessonRepo.On("GetNextVersionNumber", mock.Anything, lesson.ModuleID).Return(2, nil)
-	mockLessonRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.LessonVersion")).Return(nil)
+	mockLessonRepo.On("GetNextVersionNumber", mock.Anything, lessonID).Return(2, nil)
+	mockLessonRepo.On("CreateVersion", mock.Anything, mock.AnythingOfType("*entity.LessonVersion")).Return(nil)
 	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
 	newLesson := &entity.LessonVersion{
 		Content: "New Content",
 	}
 
-	err := uc.CreateLessonVersion(context.Background(), lesson.ID, newLesson, instructor.ID)
+	err := uc.CreateLessonVersion(context.Background(), lessonID, newLesson, instructor.ID)
 	require.NoError(t, err)
 
 	mockLessonRepo.AssertExpectations(t)
@@ -161,11 +169,12 @@ func TestLessonUseCase_GetLatestLessonsByModule(t *testing.T) {
 	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 
 	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(&entity.Module{ID: moduleID}, nil)
-	mockLessonRepo.On("GetLatestByModule", mock.Anything, moduleID).Return(lessons, nil)
+	mockLessonRepo.On("GetLatestByModule", mock.Anything, moduleID, 10, 0).Return(lessons, int64(len(lessons)), nil)
 
-	result, err := uc.GetLatestLessonsByModule(context.Background(), moduleID)
+	result, total, err := uc.GetLatestLessonsByModule(context.Background(), moduleID, 10, 0)
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
+	assert.Equal(t, int64(len(lessons)), total)
 
 	mockLessonRepo.AssertExpectations(t)
 }
@@ -184,11 +193,12 @@ func TestLessonUseCase_GetAllLessonVersions(t *testing.T) {
 
 	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 
-	mockLessonRepo.On("GetAllVersions", mock.Anything, lessonID).Return(versions, nil)
+	mockLessonRepo.On("GetAllVersions", mock.Anything, lessonID, 10, 0).Return(versions, int64(len(versions)), nil)
 
-	result, err := uc.GetAllLessonVersions(context.Background(), lessonID)
+	result, total, err := uc.GetAllLessonVersions(context.Background(), lessonID, 10, 0)
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
+	assert.Equal(t, int64(len(versions)), total)
 
 	mockLessonRepo.AssertExpectations(t)
 }
@@ -204,7 +214,7 @@ func TestLessonUseCase_GetLesson(t *testing.T) {
 
 	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 
-	mockLessonRepo.On("GetByID", mock.Anything, lessonID).Return(lesson, nil)
+	mockLessonRepo.On("GetVersionByID", mock.Anything, lessonID).Return(lesson, nil)
 
 	result, err := uc.GetLesson(context.Background(), lessonID)
 	require.NoError(t, err)
@@ -225,7 +235,7 @@ func TestLessonUseCase_DeleteLesson(t *testing.T) {
 		CourseID: course.ID,
 		Title:    "Module 1",
 	}
-	lesson := &entity.LessonVersion{
+	lesson := &entity.Lesson{
 		ID:       uuid.New(),
 		ModuleID: module.ID,
 	}
@@ -237,10 +247,11 @@ func TestLessonUseCase_DeleteLesson(t *testing.T) {
 
 	uc := NewLessonUseCase(mockLessonRepo, mockModuleRepo, mockCourseRepo, mockAuditRepo)
 
-	mockLessonRepo.On("GetByID", mock.Anything, lesson.ID).Return(lesson, nil)
+	mockLessonRepo.On("GetLessonByID", mock.Anything, lesson.ID).Return(lesson, nil)
 	mockModuleRepo.On("GetByID", mock.Anything, module.ID).Return(module, nil)
 	mockCourseRepo.On("GetByID", mock.Anything, course.ID).Return(course, nil)
-	mockLessonRepo.On("Delete", mock.Anything, lesson.ID).Return(nil)
+	mockLessonRepo.On("DeleteVersionsByLesson", mock.Anything, lesson.ID).Return(nil)
+	mockLessonRepo.On("DeleteLesson", mock.Anything, lesson.ID).Return(nil)
 	mockAuditRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.AuditLog")).Return(nil)
 
 	err := uc.DeleteLesson(context.Background(), lesson.ID, instructor.ID)

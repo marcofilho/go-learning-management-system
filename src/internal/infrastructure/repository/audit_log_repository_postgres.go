@@ -32,14 +32,20 @@ func (r *PostgresAuditLogRepository) GetByID(ctx context.Context, id uuid.UUID) 
 	return &auditLog, nil
 }
 
-func (r *PostgresAuditLogRepository) List(ctx context.Context, limit, offset int) ([]*entity.AuditLog, error) {
+func (r *PostgresAuditLogRepository) List(ctx context.Context, limit, offset int) ([]*entity.AuditLog, int64, error) {
 	var auditLogs []*entity.AuditLog
-	if err := r.db.WithContext(ctx).
-		Limit(limit).
+	query := r.db.WithContext(ctx).Model(&entity.AuditLog{})
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := query.Limit(limit).
 		Offset(offset).
 		Order("created_at DESC").
 		Find(&auditLogs).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return auditLogs, nil
+	return auditLogs, total, nil
 }

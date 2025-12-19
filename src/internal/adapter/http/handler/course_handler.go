@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -124,12 +123,12 @@ func (h *CourseHandler) ListCourses(w http.ResponseWriter, r *http.Request) {
 	instructorIDStr := r.URL.Query().Get("instructor_id")
 	difficultyLevel := r.URL.Query().Get("difficulty_level")
 	activeOnlyStr := r.URL.Query().Get("active_only")
-	limitStr := r.URL.Query().Get("limit")
-	offsetStr := r.URL.Query().Get("offset")
+
+	pg := parsePagination(r)
 
 	filter := &repository.CourseFilter{
-		Limit:  10,
-		Offset: 0,
+		Limit:  pg.limit,
+		Offset: pg.offset,
 	}
 
 	if instructorIDStr != "" {
@@ -151,19 +150,7 @@ func (h *CourseHandler) ListCourses(w http.ResponseWriter, r *http.Request) {
 		filter.ActiveOnly = true
 	}
 
-	if limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
-			filter.Limit = l
-		}
-	}
-
-	if offsetStr != "" {
-		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
-			filter.Offset = o
-		}
-	}
-
-	courses, err := h.courseUseCase.ListCourses(r.Context(), filter)
+	courses, total, err := h.courseUseCase.ListCourses(r.Context(), filter)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -174,7 +161,10 @@ func (h *CourseHandler) ListCourses(w http.ResponseWriter, r *http.Request) {
 		response = append(response, MapEntityToCourseDTO(course))
 	}
 
-	respondWithJSON(w, http.StatusOK, response)
+	respondWithJSON(w, http.StatusOK, paginatedResponse{
+		Data:       response,
+		Pagination: buildPagination(pg.page, pg.pageSize, total),
+	})
 }
 
 // UpdateCourse godoc

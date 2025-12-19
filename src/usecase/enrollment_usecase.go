@@ -67,11 +67,11 @@ func (uc *EnrollmentUseCase) EnrollStudent(ctx context.Context, studentID, cours
 	return enrollment, nil
 }
 
-func (uc *EnrollmentUseCase) GetStudentCourses(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (uc *EnrollmentUseCase) GetStudentCourses(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	return uc.enrollmentRepo.GetByStudent(ctx, studentID, filter)
 }
 
-func (uc *EnrollmentUseCase) GetCourseStudents(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (uc *EnrollmentUseCase) GetCourseStudents(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	return uc.enrollmentRepo.GetByCourse(ctx, courseID, filter)
 }
 

@@ -183,6 +183,72 @@ func RequireModuleOwnership(moduleRepo repository.ModuleRepository, courseRepo r
 	}
 }
 
+// RequireModuleAccess ensures admin, owning instructor, or enrolled student can access module content.
+func RequireModuleAccess(moduleRepo repository.ModuleRepository, courseRepo repository.CourseRepository, enrollmentRepo repository.EnrollmentRepository) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims, ok := r.Context().Value(UserContextKey).(*auth.Claims)
+			if !ok {
+				respondWithError(w, http.StatusUnauthorized, entity.ErrUnauthorized, "User not authenticated")
+				return
+			}
+
+			if claims.Role == entity.UserRoleAdmin {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			vars := mux.Vars(r)
+			moduleIDStr := vars["moduleId"]
+			if moduleIDStr == "" {
+				moduleIDStr = vars["id"]
+			}
+
+			if moduleIDStr == "" {
+				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Module ID not found in request")
+				return
+			}
+
+			moduleID, err := uuid.Parse(moduleIDStr)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid module ID format")
+				return
+			}
+
+			module, err := moduleRepo.GetByID(r.Context(), moduleID)
+			if err != nil {
+				if err == entity.ErrNotFound {
+					respondWithError(w, http.StatusNotFound, entity.ErrNotFound, "Module not found")
+				} else {
+					respondWithError(w, http.StatusInternalServerError, err, "Failed to verify module access")
+				}
+				return
+			}
+
+			course, err := courseRepo.GetByID(r.Context(), module.CourseID)
+			if err != nil {
+				respondWithError(w, http.StatusInternalServerError, err, "Failed to verify course access")
+				return
+			}
+
+			if claims.Role == entity.UserRoleInstructor && course.InstructorID == claims.UserID {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			if claims.Role == entity.UserRoleStudent {
+				enrollment, err := enrollmentRepo.GetByStudentAndCourse(r.Context(), claims.UserID, course.ID)
+				if err != nil || enrollment == nil || !enrollment.IsActive() {
+					respondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "You must be enrolled in this course to access its content")
+					return
+				}
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // RequireAdminOrSelf ensures user is admin or accessing their own user resource
 func RequireAdminOrSelf() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

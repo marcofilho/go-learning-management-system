@@ -42,12 +42,12 @@ func (m *MockCourseRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return args.Error(0)
 }
 
-func (m *MockCourseRepository) List(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, error) {
+func (m *MockCourseRepository) List(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, int64, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Course), args.Error(1)
+	return args.Get(0).([]*entity.Course), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockCourseRepository) GetByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error) {
@@ -143,20 +143,20 @@ func (m *MockEnrollmentRepository) Delete(ctx context.Context, studentID, course
 	return args.Error(0)
 }
 
-func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	args := m.Called(ctx, studentID, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Enrollment), args.Error(1)
+	return args.Get(0).([]*entity.Enrollment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	args := m.Called(ctx, courseID, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Enrollment), args.Error(1)
+	return args.Get(0).([]*entity.Enrollment), args.Get(1).(int64), args.Error(2)
 }
 
 func TestRequireEnrollment(t *testing.T) {

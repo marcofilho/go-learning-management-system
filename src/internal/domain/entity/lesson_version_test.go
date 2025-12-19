@@ -9,6 +9,7 @@ import (
 
 func TestLessonVersion_Validate(t *testing.T) {
 	validModuleID := uuid.New()
+	validLessonID := uuid.New()
 
 	tests := []struct {
 		name    string
@@ -19,6 +20,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 		{
 			name: "valid lesson with content",
 			lesson: &LessonVersion{
+				LessonID:      validLessonID,
 				ModuleID:      validModuleID,
 				VersionNumber: 1,
 				Content:       "Lesson content here",
@@ -28,6 +30,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 		{
 			name: "valid lesson with video URL",
 			lesson: &LessonVersion{
+				LessonID:      validLessonID,
 				ModuleID:      validModuleID,
 				VersionNumber: 1,
 				VideoURL:      "https://example.com/video.mp4",
@@ -37,6 +40,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 		{
 			name: "valid lesson with both content and video",
 			lesson: &LessonVersion{
+				LessonID:      validLessonID,
 				ModuleID:      validModuleID,
 				VersionNumber: 1,
 				Content:       "Lesson content",
@@ -47,6 +51,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 		{
 			name: "empty module ID",
 			lesson: &LessonVersion{
+				LessonID:      validLessonID,
 				ModuleID:      uuid.Nil,
 				VersionNumber: 1,
 				Content:       "Content",
@@ -58,6 +63,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 		{
 			name: "version number less than 1",
 			lesson: &LessonVersion{
+				LessonID:      validLessonID,
 				ModuleID:      validModuleID,
 				VersionNumber: 0,
 				Content:       "Content",
@@ -68,6 +74,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 		{
 			name: "no content or video URL",
 			lesson: &LessonVersion{
+				LessonID:      validLessonID,
 				ModuleID:      validModuleID,
 				VersionNumber: 1,
 				Content:       "",
@@ -95,6 +102,7 @@ func TestLessonVersion_Validate(t *testing.T) {
 func TestLessonVersion_BelongsToModule(t *testing.T) {
 	moduleID := uuid.New()
 	lesson := &LessonVersion{
+		LessonID:      uuid.New(),
 		ModuleID:      moduleID,
 		VersionNumber: 1,
 		Content:       "Test content",
@@ -115,6 +123,7 @@ func TestLessonVersion_CanBeModifiedBy(t *testing.T) {
 	}
 
 	lesson := &LessonVersion{
+		LessonID:      uuid.New(),
 		ModuleID:      uuid.New(),
 		VersionNumber: 1,
 		Content:       "Test content",

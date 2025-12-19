@@ -11,8 +11,8 @@ import (
 
 type LessonVersion struct {
 	ID            uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	LessonID      uuid.UUID      `gorm:"type:uuid;not null;index" json:"lesson_id"`
 	ModuleID      uuid.UUID      `gorm:"type:uuid;not null;index" json:"module_id"`
-	Title         string         `gorm:"not null" json:"title"`
 	VersionNumber int            `gorm:"not null;default:1" json:"version_number"`
 	Content       string         `gorm:"type:text" json:"content"`
 	VideoURL      string         `gorm:"type:varchar(500)" json:"video_url,omitempty"`
@@ -20,6 +20,7 @@ type LessonVersion struct {
 	CreatedAt     time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 
+	Lesson Lesson `gorm:"foreignKey:LessonID;constraint:OnDelete:CASCADE" json:"-"`
 	Module Module `gorm:"foreignKey:ModuleID;constraint:OnDelete:CASCADE" json:"-"`
 }
 
@@ -28,6 +29,10 @@ func (LessonVersion) TableName() string {
 }
 
 func (l *LessonVersion) Validate() error {
+	if l.LessonID == uuid.Nil {
+		return fmt.Errorf("%w: lesson_id is required", ErrFieldRequired)
+	}
+
 	if l.ModuleID == uuid.Nil {
 		return fmt.Errorf("%w: module_id is required", ErrFieldRequired)
 	}
@@ -47,7 +52,6 @@ func NewLessonVersion(title, content string, moduleID uuid.UUID, version int) (*
 	lesson := &LessonVersion{
 		ID:            uuid.New(),
 		ModuleID:      moduleID,
-		Title:         title,
 		VersionNumber: version,
 		Content:       content,
 	}

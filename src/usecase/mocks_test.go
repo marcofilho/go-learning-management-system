@@ -79,12 +79,12 @@ func (m *MockCourseRepository) GetByID(ctx context.Context, id uuid.UUID) (*enti
 	return args.Get(0).(*entity.Course), args.Error(1)
 }
 
-func (m *MockCourseRepository) List(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, error) {
+func (m *MockCourseRepository) List(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, int64, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Course), args.Error(1)
+	return args.Get(0).([]*entity.Course), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockCourseRepository) GetByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error) {
@@ -133,20 +133,20 @@ func (m *MockEnrollmentRepository) Delete(ctx context.Context, studentID, course
 	return args.Error(0)
 }
 
-func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	args := m.Called(ctx, studentID, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Enrollment), args.Error(1)
+	return args.Get(0).([]*entity.Enrollment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	args := m.Called(ctx, courseID, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Enrollment), args.Error(1)
+	return args.Get(0).([]*entity.Enrollment), args.Get(1).(int64), args.Error(2)
 }
 
 // MockAuditLogRepository for testing
@@ -159,12 +159,12 @@ func (m *MockAuditLogRepository) Create(ctx context.Context, log *entity.AuditLo
 	return args.Error(0)
 }
 
-func (m *MockAuditLogRepository) List(ctx context.Context, limit, offset int) ([]*entity.AuditLog, error) {
+func (m *MockAuditLogRepository) List(ctx context.Context, limit, offset int) ([]*entity.AuditLog, int64, error) {
 	args := m.Called(ctx, limit, offset)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.AuditLog), args.Error(1)
+	return args.Get(0).([]*entity.AuditLog), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockAuditLogRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.AuditLog, error) {

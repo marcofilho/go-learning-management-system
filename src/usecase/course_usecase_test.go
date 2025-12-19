@@ -115,13 +115,14 @@ func TestCourseUseCase_ListCourses(t *testing.T) {
 	}
 	filter := &repository.CourseFilter{Limit: 10, Offset: 0}
 
-	mockCourseRepo.On("List", mock.Anything, filter).Return(courses, nil)
+	mockCourseRepo.On("List", mock.Anything, filter).Return(courses, int64(len(courses)), nil)
 
 	uc := NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
-	result, err := uc.ListCourses(context.Background(), filter)
+	result, total, err := uc.ListCourses(context.Background(), filter)
 
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
+	assert.Equal(t, int64(len(courses)), total)
 	mockCourseRepo.AssertExpectations(t)
 }
 

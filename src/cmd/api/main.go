@@ -76,6 +76,7 @@ func main() {
 	moduleUseCase := usecase.NewModuleUseCase(moduleRepo, courseRepo)
 	lessonUseCase := usecase.NewLessonUseCase(lessonRepo, moduleRepo, courseRepo, auditLogRepo)
 	certificationWebhookUseCase := usecase.NewCertificationWebhookUseCase(userRepo, courseRepo, enrollmentRepo, auditLogRepo)
+	auditLogHandler := handler.NewAuditLogHandler(auditLogRepo)
 
 	userHandler := handler.NewUserHandler(userUseCase)
 	courseHandler := handler.NewCourseHandler(courseUseCase)
@@ -84,7 +85,7 @@ func main() {
 	lessonHandler := handler.NewLessonHandler(lessonUseCase)
 	certificationWebhookHandler := handler.NewCertificationWebhookHandler(certificationWebhookUseCase)
 
-	router := SetupRoutes(userHandler, courseHandler, enrollmentHandler, moduleHandler, lessonHandler, certificationWebhookHandler, tokenProvider, courseRepo, enrollmentRepo, moduleRepo)
+	router := SetupRoutes(userHandler, courseHandler, enrollmentHandler, moduleHandler, lessonHandler, auditLogHandler, certificationWebhookHandler, tokenProvider, courseRepo, enrollmentRepo, moduleRepo)
 
 	router = middleware.LoggerMiddleware(router)
 	router = middleware.CORSMiddleware(router)

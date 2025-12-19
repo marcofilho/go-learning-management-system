@@ -16,6 +16,7 @@ func RunMigrations(db *gorm.DB) error {
 		&entity.User{},
 		&entity.Course{},
 		&entity.Module{},
+		&entity.Lesson{},
 		&entity.LessonVersion{},
 		&entity.Enrollment{},
 		&entity.AuditLog{},
@@ -55,7 +56,11 @@ func createIndexes(db *gorm.DB) error {
 	}
 
 	// Lesson indexes
-	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_lessons_module ON lesson_versions(module_id, version_number) WHERE deleted_at IS NULL").Error; err != nil {
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_lessons_module ON lessons(module_id) WHERE deleted_at IS NULL").Error; err != nil {
+		return err
+	}
+
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_lesson_versions_lesson ON lesson_versions(lesson_id, version_number) WHERE deleted_at IS NULL").Error; err != nil {
 		return err
 	}
 

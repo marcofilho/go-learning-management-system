@@ -95,12 +95,12 @@ func (m *MockCourseRepository) GetByID(ctx context.Context, id uuid.UUID) (*enti
 	return args.Get(0).(*entity.Course), args.Error(1)
 }
 
-func (m *MockCourseRepository) List(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, error) {
+func (m *MockCourseRepository) List(ctx context.Context, filter *repository.CourseFilter) ([]*entity.Course, int64, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Course), args.Error(1)
+	return args.Get(0).([]*entity.Course), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockCourseRepository) GetByInstructor(ctx context.Context, instructorID uuid.UUID) ([]*entity.Course, error) {
@@ -138,12 +138,12 @@ func (m *MockAuditLogRepository) GetByID(ctx context.Context, id uuid.UUID) (*en
 	return args.Get(0).(*entity.AuditLog), args.Error(1)
 }
 
-func (m *MockAuditLogRepository) List(ctx context.Context, limit, offset int) ([]*entity.AuditLog, error) {
+func (m *MockAuditLogRepository) List(ctx context.Context, limit, offset int) ([]*entity.AuditLog, int64, error) {
 	args := m.Called(ctx, limit, offset)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.AuditLog), args.Error(1)
+	return args.Get(0).([]*entity.AuditLog), args.Get(1).(int64), args.Error(2)
 }
 
 // Enrollment
@@ -163,20 +163,20 @@ func (m *MockEnrollmentRepository) GetByStudentAndCourse(ctx context.Context, st
 	return args.Get(0).(*entity.Enrollment), args.Error(1)
 }
 
-func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByStudent(ctx context.Context, studentID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	args := m.Called(ctx, studentID, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Enrollment), args.Error(1)
+	return args.Get(0).([]*entity.Enrollment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, error) {
+func (m *MockEnrollmentRepository) GetByCourse(ctx context.Context, courseID uuid.UUID, filter *repository.EnrollmentFilter) ([]*entity.Enrollment, int64, error) {
 	args := m.Called(ctx, courseID, filter)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.Enrollment), args.Error(1)
+	return args.Get(0).([]*entity.Enrollment), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockEnrollmentRepository) Update(ctx context.Context, enrollment *entity.Enrollment) error {
@@ -228,12 +228,30 @@ func (m *MockModuleRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 type MockLessonRepository struct{ mock.Mock }
 
-func (m *MockLessonRepository) Create(ctx context.Context, lesson *entity.LessonVersion) error {
+func (m *MockLessonRepository) CreateLesson(ctx context.Context, lesson *entity.Lesson) error {
 	args := m.Called(ctx, lesson)
 	return args.Error(0)
 }
 
-func (m *MockLessonRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.LessonVersion, error) {
+func (m *MockLessonRepository) GetLessonByID(ctx context.Context, id uuid.UUID) (*entity.Lesson, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.Lesson), args.Error(1)
+}
+
+func (m *MockLessonRepository) DeleteLesson(ctx context.Context, lessonID uuid.UUID) error {
+	args := m.Called(ctx, lessonID)
+	return args.Error(0)
+}
+
+func (m *MockLessonRepository) CreateVersion(ctx context.Context, lesson *entity.LessonVersion) error {
+	args := m.Called(ctx, lesson)
+	return args.Error(0)
+}
+
+func (m *MockLessonRepository) GetVersionByID(ctx context.Context, id uuid.UUID) (*entity.LessonVersion, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -241,36 +259,28 @@ func (m *MockLessonRepository) GetByID(ctx context.Context, id uuid.UUID) (*enti
 	return args.Get(0).(*entity.LessonVersion), args.Error(1)
 }
 
-func (m *MockLessonRepository) GetByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
-	args := m.Called(ctx, moduleID)
+func (m *MockLessonRepository) GetLatestByModule(ctx context.Context, moduleID uuid.UUID, limit, offset int) ([]*entity.LessonVersion, int64, error) {
+	args := m.Called(ctx, moduleID, limit, offset)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
+	return args.Get(0).([]*entity.LessonVersion), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockLessonRepository) GetLatestByModule(ctx context.Context, moduleID uuid.UUID) ([]*entity.LessonVersion, error) {
-	args := m.Called(ctx, moduleID)
+func (m *MockLessonRepository) GetAllVersions(ctx context.Context, lessonID uuid.UUID, limit, offset int) ([]*entity.LessonVersion, int64, error) {
+	args := m.Called(ctx, lessonID, limit, offset)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
+	return args.Get(0).([]*entity.LessonVersion), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockLessonRepository) GetAllVersions(ctx context.Context, lessonID uuid.UUID) ([]*entity.LessonVersion, error) {
+func (m *MockLessonRepository) GetNextVersionNumber(ctx context.Context, lessonID uuid.UUID) (int, error) {
 	args := m.Called(ctx, lessonID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*entity.LessonVersion), args.Error(1)
-}
-
-func (m *MockLessonRepository) GetNextVersionNumber(ctx context.Context, moduleID uuid.UUID) (int, error) {
-	args := m.Called(ctx, moduleID)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockLessonRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	args := m.Called(ctx, id)
+func (m *MockLessonRepository) DeleteVersionsByLesson(ctx context.Context, lessonID uuid.UUID) error {
+	args := m.Called(ctx, lessonID)
 	return args.Error(0)
 }
