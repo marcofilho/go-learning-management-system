@@ -85,8 +85,8 @@ func SetupRoutes(
 
 	enrollments := api.PathPrefix("/enrollments").Subrouter()
 	enrollments.Use(middleware.AuthMiddleware(tokenProvider))
-	enrollments.Handle("/{courseId}/status", middleware.RequireAdminOrSelf()(http.HandlerFunc(enrollmentHandler.UpdateEnrollmentStatus))).Methods(http.MethodPut)
-	enrollments.Handle("/{courseId}", middleware.RequireAdminOrSelf()(http.HandlerFunc(enrollmentHandler.DropEnrollment))).Methods(http.MethodDelete)
+	enrollments.HandleFunc("/{courseId}/status", enrollmentHandler.UpdateEnrollmentStatus).Methods(http.MethodPut)
+	enrollments.HandleFunc("/{courseId}", enrollmentHandler.DropEnrollment).Methods(http.MethodDelete)
 
 	auditLogs := api.PathPrefix("/audit-logs").Subrouter()
 	auditLogs.Use(middleware.AuthMiddleware(tokenProvider))
