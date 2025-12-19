@@ -129,3 +129,101 @@ func TestModuleHandler_DeleteModule_Success(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, rr.Code)
 	mockModuleRepo.AssertExpectations(t)
 }
+
+func TestModuleHandler_UpdateModule_Success(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	handler := NewModuleHandler(moduleUC)
+
+	moduleID := uuid.New()
+	courseID := uuid.New()
+	instructorID := uuid.New()
+
+	module := &entity.Module{ID: moduleID, CourseID: courseID, Title: "Old Title", OrderIndex: 1}
+	course := &entity.Course{ID: courseID, InstructorID: instructorID, Title: "Test Course"}
+
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil)
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
+	mockModuleRepo.On("Update", mock.Anything, mock.AnythingOfType("*entity.Module")).Return(nil)
+
+	reqBody := dto.UpdateModuleRequest{Title: "Updated Title", OrderIndex: 2}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPut, "/modules/"+moduleID.String(), bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+
+	claims := &auth.Claims{UserID: instructorID, Email: "instructor@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.UpdateModule(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+}
+
+func TestModuleHandler_UpdateModule_Unauthorized(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	handler := NewModuleHandler(moduleUC)
+
+	moduleID := uuid.New()
+	courseID := uuid.New()
+	instructorID := uuid.New()
+	otherUserID := uuid.New()
+
+	module := &entity.Module{ID: moduleID, CourseID: courseID, Title: "Old Title", OrderIndex: 1}
+	course := &entity.Course{ID: courseID, InstructorID: instructorID, Title: "Test Course"}
+
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(module, nil)
+	mockCourseRepo.On("GetByID", mock.Anything, courseID).Return(course, nil)
+
+	reqBody := dto.UpdateModuleRequest{Title: "Updated Title", OrderIndex: 2}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPut, "/modules/"+moduleID.String(), bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+
+	claims := &auth.Claims{UserID: otherUserID, Email: "other@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.UpdateModule(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+	mockCourseRepo.AssertExpectations(t)
+}
+
+func TestModuleHandler_UpdateModule_NotFound(t *testing.T) {
+	mockModuleRepo := new(MockModuleRepository)
+	mockCourseRepo := new(MockCourseRepository)
+
+	moduleUC := usecase.NewModuleUseCase(mockModuleRepo, mockCourseRepo)
+	handler := NewModuleHandler(moduleUC)
+
+	moduleID := uuid.New()
+	instructorID := uuid.New()
+
+	mockModuleRepo.On("GetByID", mock.Anything, moduleID).Return(nil, entity.ErrNotFound)
+
+	reqBody := dto.UpdateModuleRequest{Title: "Updated Title", OrderIndex: 2}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPut, "/modules/"+moduleID.String(), bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"id": moduleID.String()})
+
+	claims := &auth.Claims{UserID: instructorID, Email: "instructor@example.com", Role: entity.UserRoleInstructor}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.UpdateModule(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	mockModuleRepo.AssertExpectations(t)
+}
