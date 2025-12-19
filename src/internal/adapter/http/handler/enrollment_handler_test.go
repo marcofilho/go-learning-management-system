@@ -60,6 +60,76 @@ func TestEnrollmentHandler_EnrollInCourse_SelfEnrollment(t *testing.T) {
 	mockEnrollRepo.AssertExpectations(t)
 }
 
+func TestEnrollmentHandler_EnrollInCourse_InvalidCourseID(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	studentID := uuid.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/courses/invalid-uuid/enroll", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "invalid-uuid"})
+
+	claims := &auth.Claims{UserID: studentID, Email: "student@example.com", Role: entity.UserRoleStudent}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.EnrollInCourse(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestEnrollmentHandler_EnrollInCourse_Unauthorized(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	courseID := uuid.New()
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID.String()+"/enroll", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
+
+	rr := httptest.NewRecorder()
+	handler.EnrollInCourse(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+}
+
+func TestEnrollmentHandler_EnrollInCourse_InvalidStudentIDInBody(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	studentID := uuid.New()
+	courseID := uuid.New()
+
+	reqBody := dto.EnrollCourseRequest{StudentID: "not-a-uuid"}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/courses/"+courseID.String()+"/enroll", bytes.NewBuffer(body))
+	req = mux.SetURLVars(req, map[string]string{"id": courseID.String()})
+
+	claims := &auth.Claims{UserID: studentID, Email: "student@example.com", Role: entity.UserRoleStudent}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, claims)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	handler.EnrollInCourse(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
 func TestEnrollmentHandler_GetStudentCourses_Success(t *testing.T) {
 	mockEnrollRepo := new(MockEnrollmentRepository)
 	mockUserRepo := new(MockUserRepository)
@@ -87,6 +157,51 @@ func TestEnrollmentHandler_GetStudentCourses_Success(t *testing.T) {
 	mockEnrollRepo.AssertExpectations(t)
 }
 
+func TestEnrollmentHandler_GetStudentCourses_WithFilters(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	studentID := uuid.New()
+	enrollments := []*entity.Enrollment{
+		{StudentID: studentID, CourseID: uuid.New(), Status: entity.EnrollmentStatusActive},
+	}
+
+	mockEnrollRepo.On("GetByStudent", mock.Anything, studentID, mock.AnythingOfType("*repository.EnrollmentFilter")).Return(enrollments, nil)
+
+	url := "/students/" + studentID.String() + "/courses?status=active&date_from=2025-01-01&date_to=2025-12-31&limit=5&offset=2"
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req = mux.SetURLVars(req, map[string]string{"id": studentID.String()})
+	rr := httptest.NewRecorder()
+
+	handler.GetStudentCourses(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockEnrollRepo.AssertExpectations(t)
+}
+
+func TestEnrollmentHandler_GetStudentCourses_InvalidStudentID(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	req := httptest.NewRequest(http.MethodGet, "/students/invalid-uuid/courses", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "invalid-uuid"})
+	rr := httptest.NewRecorder()
+
+	handler.GetStudentCourses(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
 func TestEnrollmentHandler_GetCourseStudents_Success(t *testing.T) {
 	mockEnrollRepo := new(MockEnrollmentRepository)
 	mockUserRepo := new(MockUserRepository)
@@ -112,4 +227,22 @@ func TestEnrollmentHandler_GetCourseStudents_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 	mockEnrollRepo.AssertExpectations(t)
+}
+
+func TestEnrollmentHandler_GetCourseStudents_InvalidCourseID(t *testing.T) {
+	mockEnrollRepo := new(MockEnrollmentRepository)
+	mockUserRepo := new(MockUserRepository)
+	mockCourseRepo := new(MockCourseRepository)
+	mockAuditRepo := new(MockAuditLogRepository)
+
+	enrollmentUC := usecase.NewEnrollmentUseCase(mockEnrollRepo, mockCourseRepo, mockUserRepo, mockAuditRepo)
+	handler := NewEnrollmentHandler(enrollmentUC)
+
+	req := httptest.NewRequest(http.MethodGet, "/courses/invalid-uuid/students", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "invalid-uuid"})
+	rr := httptest.NewRecorder()
+
+	handler.GetCourseStudents(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
