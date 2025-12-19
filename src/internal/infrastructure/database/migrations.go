@@ -76,12 +76,23 @@ func createIndexes(db *gorm.DB) error {
 }
 
 func DropAllTables(db *gorm.DB) error {
-	return db.Migrator().DropTable(
+	// Drop audit_logs first to avoid foreign key constraints
+	// Then drop in reverse order of dependencies
+	tables := []interface{}{
 		&entity.AuditLog{},
 		&entity.Enrollment{},
 		&entity.LessonVersion{},
 		&entity.Module{},
 		&entity.Course{},
 		&entity.User{},
-	)
+	}
+
+	for _, table := range tables {
+		if err := db.Migrator().DropTable(table); err != nil {
+			// Continue dropping other tables even if one fails
+			continue
+		}
+	}
+
+	return nil
 }
