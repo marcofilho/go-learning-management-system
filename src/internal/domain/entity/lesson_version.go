@@ -12,13 +12,13 @@ import (
 type LessonVersion struct {
 	ID            uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	LessonID      uuid.UUID      `gorm:"type:uuid;not null;index" json:"lesson_id"`
-	ModuleID      uuid.UUID      `gorm:"type:uuid;not null;index" json:"module_id"`
+	ModuleID      uuid.UUID      `gorm:"-" json:"module_id"`
 	VersionNumber int            `gorm:"not null;default:1" json:"version_number"`
 	Content       string         `gorm:"type:text" json:"content"`
 	VideoURL      string         `gorm:"type:varchar(500)" json:"video_url,omitempty"`
-	AttachmentURL string         `gorm:"type:varchar(500)" json:"attachment_url,omitempty"`
+	AttachmentURL string         `gorm:"-" json:"attachment_url,omitempty"`
 	CreatedAt     time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
+	DeletedAt     gorm.DeletedAt `gorm:"-" json:"-"`
 
 	Lesson Lesson `gorm:"foreignKey:LessonID;constraint:OnDelete:CASCADE" json:"-"`
 	Module Module `gorm:"foreignKey:ModuleID;constraint:OnDelete:CASCADE" json:"-"`

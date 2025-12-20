@@ -24,7 +24,7 @@ var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-
 type User struct {
 	ID        uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	Email     string         `gorm:"uniqueIndex;not null" json:"email"`
-	Password  string         `gorm:"not null" json:"-"`
+	Password  string         `gorm:"column:password_hash;not null" json:"-"`
 	FirstName string         `gorm:"not null" json:"first_name"`
 	LastName  string         `gorm:"not null" json:"last_name"`
 	Role      UserRole       `gorm:"type:varchar(20);not null;default:'student'" json:"role"`

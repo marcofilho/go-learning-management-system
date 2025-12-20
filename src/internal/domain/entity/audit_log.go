@@ -24,19 +24,19 @@ const (
 )
 
 type AuditLog struct {
-	ID          uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	Action      AuditAction    `gorm:"type:varchar(50);not null" json:"action"`
-	EntityID    uuid.UUID      `gorm:"type:uuid;not null" json:"entity_id"`
-	EntityType  string         `gorm:"type:varchar(50);not null" json:"entity_type"`
-	OldValues   string         `gorm:"type:jsonb" json:"old_values,omitempty"`
-	NewValues   string         `gorm:"type:jsonb" json:"new_values,omitempty"`
-	UserID      *uuid.UUID     `gorm:"type:uuid" json:"user_id,omitempty"`
-	UserRole    *string        `gorm:"type:varchar(50)" json:"user_role,omitempty"`
-	PerformedAt time.Time      `gorm:"autoCreateTime" json:"performed_at"`
-	CreatedAt   time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	ID          uuid.UUID      `gorm:"-" json:"id"`
+	Action      AuditAction    `gorm:"-" json:"action"`
+	EntityID    uuid.UUID      `gorm:"-" json:"entity_id"`
+	EntityType  string         `gorm:"-" json:"entity_type"`
+	OldValues   string         `gorm:"-" json:"old_values,omitempty"`
+	NewValues   string         `gorm:"-" json:"new_values,omitempty"`
+	UserID      *uuid.UUID     `gorm:"-" json:"user_id,omitempty"`
+	UserRole    *string        `gorm:"-" json:"user_role,omitempty"`
+	PerformedAt time.Time      `gorm:"-" json:"performed_at"`
+	CreatedAt   time.Time      `gorm:"-" json:"created_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"-" json:"-"`
 
-	User *User `gorm:"foreignKey:UserID" json:"-"`
+	User *User `gorm:"-" json:"-"`
 }
 
 func (AuditLog) TableName() string {
