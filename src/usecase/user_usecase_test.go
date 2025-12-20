@@ -94,7 +94,8 @@ func TestUserUseCase_Register(t *testing.T) {
 			tt.setupMock(mockRepo)
 
 			uc := NewUserUseCase(mockRepo, mockTokenProvider)
-			user, err := uc.Register(context.Background(), tt.email, tt.password, tt.firstName, tt.lastName, tt.role)
+			var requestorRole *entity.UserRole
+			user, err := uc.Register(context.Background(), tt.email, tt.password, tt.firstName, tt.lastName, tt.role, requestorRole)
 
 			if tt.wantErr {
 				assert.Error(t, err)

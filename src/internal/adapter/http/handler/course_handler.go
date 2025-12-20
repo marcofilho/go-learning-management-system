@@ -7,8 +7,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/dto"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/adapter/http/middleware"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/entity"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/domain/repository"
+	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/internal/infrastructure/auth"
 	"github.com/marcoantoniobarcelloslimafilho/go-learning-management-system/src/usecase"
 )
 
@@ -46,19 +48,20 @@ func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	instructorID := userID
-	if req.InstructorID != "" {
-		if !IsAdmin(r) {
-			respondWithError(w, http.StatusForbidden, "Only admins can create courses for other instructors")
-			return
-		}
+	if !validateAndRespond(w, &req) {
+		return
+	}
 
-		if _, err := uuid.Parse(req.InstructorID); err != nil {
+	var instructorID uuid.UUID
+	if req.InstructorID != "" {
+		parsedID, err := uuid.Parse(req.InstructorID)
+		if err != nil {
 			respondWithError(w, http.StatusBadRequest, "Invalid instructor ID format")
 			return
 		}
-
-		instructorID = uuid.MustParse(req.InstructorID)
+		instructorID = parsedID
+	} else {
+		instructorID = userID
 	}
 
 	difficultyLevel := entity.DifficultyLevel(req.DifficultyLevel)
@@ -66,7 +69,13 @@ func (h *CourseHandler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 		difficultyLevel = entity.DifficultyLevelBeginner
 	}
 
-	course, err := h.courseUseCase.CreateCourse(r.Context(), req.Title, req.Description, instructorID, difficultyLevel)
+	claims, hasAuth := r.Context().Value(middleware.UserContextKey).(*auth.Claims)
+	var requestorRole *entity.UserRole
+	if hasAuth {
+		requestorRole = &claims.Role
+	}
+
+	course, err := h.courseUseCase.CreateCourse(r.Context(), req.Title, req.Description, instructorID, difficultyLevel, userID, requestorRole)
 	if err != nil {
 		handleUseCaseError(w, err)
 		return
@@ -212,6 +221,10 @@ func (h *CourseHandler) UpdateCourse(w http.ResponseWriter, r *http.Request) {
 	var req dto.UpdateCourseRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if !validateAndRespond(w, &req) {
 		return
 	}
 

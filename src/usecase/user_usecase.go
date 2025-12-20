@@ -22,7 +22,13 @@ func NewUserUseCase(userRepo repository.UserRepository, tokenProvider auth.Token
 	}
 }
 
-func (uc *UserUseCase) Register(ctx context.Context, email, password, firstName, lastName string, role entity.UserRole) (*entity.User, error) {
+func (uc *UserUseCase) Register(ctx context.Context, email, password, firstName, lastName string, role entity.UserRole, requestorRole *entity.UserRole) (*entity.User, error) {
+	if role == entity.UserRoleAdmin || role == entity.UserRoleInstructor {
+		if requestorRole == nil || *requestorRole != entity.UserRoleAdmin {
+			return nil, entity.ErrInsufficientPermissions
+		}
+	}
+
 	existing, _ := uc.userRepo.GetByEmail(ctx, email)
 	if existing != nil {
 		return nil, entity.ErrDuplicateEntry

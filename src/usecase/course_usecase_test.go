@@ -22,6 +22,8 @@ func TestCourseUseCase_CreateCourse(t *testing.T) {
 		desc      string
 		instID    uuid.UUID
 		level     entity.DifficultyLevel
+		requestorID uuid.UUID
+		requestorRole *entity.UserRole
 		setupMock func(*MockCourseRepository, *MockUserRepository, *MockAuditLogRepository)
 		wantErr   bool
 		checkErr  func(error) bool
@@ -32,6 +34,8 @@ func TestCourseUseCase_CreateCourse(t *testing.T) {
 			desc:   "Test Description",
 			instID: instructor.ID,
 			level:  entity.DifficultyLevelBeginner,
+			requestorID: instructor.ID,
+			requestorRole: func() *entity.UserRole { role := entity.UserRoleInstructor; return &role }(),
 			setupMock: func(courseRepo *MockCourseRepository, userRepo *MockUserRepository, auditRepo *MockAuditLogRepository) {
 				userRepo.On("GetByID", mock.Anything, instructor.ID).Return(instructor, nil)
 				courseRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.Course")).Return(nil)
@@ -43,10 +47,15 @@ func TestCourseUseCase_CreateCourse(t *testing.T) {
 			name:   "instructor not found",
 			title:  "Test Course",
 			desc:   "Test Description",
-			instID: uuid.New(),
+			instID: func() uuid.UUID { id := uuid.New(); return id }(),
 			level:  entity.DifficultyLevelBeginner,
+			requestorID: func() uuid.UUID { 
+				var id uuid.UUID
+				return id // This will be overwritten in the test to match instID
+			}(),
+			requestorRole: func() *entity.UserRole { role := entity.UserRoleInstructor; return &role }(),
 			setupMock: func(courseRepo *MockCourseRepository, userRepo *MockUserRepository, auditRepo *MockAuditLogRepository) {
-				userRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, entity.ErrNotFound)
+				// Mock will be set up with the actual instID in the test
 			},
 			wantErr: true,
 			checkErr: func(err error) bool {
@@ -61,10 +70,16 @@ func TestCourseUseCase_CreateCourse(t *testing.T) {
 			mockUserRepo := new(MockUserRepository)
 			mockAuditRepo := new(MockAuditLogRepository)
 
-			tt.setupMock(mockCourseRepo, mockUserRepo, mockAuditRepo)
+			requestorID := tt.requestorID
+			if tt.name == "instructor not found" {
+				requestorID = tt.instID // Make requestorID match instID so authorization passes
+				mockUserRepo.On("GetByID", mock.Anything, tt.instID).Return(nil, entity.ErrNotFound)
+			} else {
+				tt.setupMock(mockCourseRepo, mockUserRepo, mockAuditRepo)
+			}
 
 			uc := NewCourseUseCase(mockCourseRepo, mockUserRepo, mockAuditRepo)
-			course, err := uc.CreateCourse(context.Background(), tt.title, tt.desc, tt.instID, tt.level)
+			course, err := uc.CreateCourse(context.Background(), tt.title, tt.desc, tt.instID, tt.level, requestorID, tt.requestorRole)
 
 			if tt.wantErr {
 				assert.Error(t, err)

@@ -24,20 +24,34 @@ func NewCourseUseCase(courseRepo repository.CourseRepository, userRepo repositor
 	}
 }
 
-func (uc *CourseUseCase) CreateCourse(ctx context.Context, title, description string, instructorID uuid.UUID, difficultyLevel entity.DifficultyLevel) (*entity.Course, error) {
+func (uc *CourseUseCase) CreateCourse(ctx context.Context, title, description string, instructorID uuid.UUID, difficultyLevel entity.DifficultyLevel, requestorID uuid.UUID, requestorRole *entity.UserRole) (*entity.Course, error) {
+	if instructorID != requestorID {
+		if requestorRole == nil || *requestorRole != entity.UserRoleAdmin {
+			return nil, entity.ErrInsufficientPermissions
+		}
+	}
+
 	instructor, err := uc.userRepo.GetByID(ctx, instructorID)
 	if err != nil {
 		return nil, entity.ErrNotFound
 	}
 
+	if !instructor.IsInstructor() {
+		return nil, entity.ErrInvalidInput
+	}
+
 	course, err := entity.NewCourse(title, description, instructorID, difficultyLevel, instructor)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := uc.courseRepo.Create(ctx, course); err != nil {
 		return nil, err
 	}
 
 	// Create audit log
 	payloadAfter := fmt.Sprintf(`{"id":"%s","title":"%s","instructor_id":"%s","difficulty_level":"%s"}`, course.ID, course.Title, course.InstructorID, course.DifficultyLevel)
-	auditLog, _ := entity.NewAuditLog(entity.AuditActionCourseCreated, course.ID, "course", "", payloadAfter, &instructorID)
+	auditLog, _ := entity.NewAuditLog(entity.AuditActionCourseCreated, course.ID, "course", "", payloadAfter, &requestorID)
 	uc.auditLogRepo.Create(ctx, auditLog)
 
 	return course, nil

@@ -43,26 +43,30 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Default to student role if not specified
+	if err := validateRequest(&req); err != nil {
+		RespondWithError(w, http.StatusBadRequest, err, err.Error())
+		return
+	}
+
 	role := entity.UserRoleStudent
 	if req.Role != "" {
 		role = entity.UserRole(req.Role)
 	}
 
-	// Only admins can create admin or instructor users
-	if role == entity.UserRoleAdmin || role == entity.UserRoleInstructor {
-		// Check if request has authentication
-		claims, ok := r.Context().Value(middleware.UserContextKey).(*auth.Claims)
-		if !ok || claims.Role != entity.UserRoleAdmin {
-			RespondWithError(w, http.StatusForbidden, entity.ErrInsufficientPermissions, "Only administrators can create admin or instructor accounts")
-			return
-		}
+	var requestorRole *entity.UserRole
+	claims, hasAuth := r.Context().Value(middleware.UserContextKey).(*auth.Claims)
+	if hasAuth {
+		requestorRole = &claims.Role
 	}
 
-	user, err := h.userUseCase.Register(r.Context(), req.Email, req.Password, req.FirstName, req.LastName, role)
+	user, err := h.userUseCase.Register(r.Context(), req.Email, req.Password, req.FirstName, req.LastName, role, requestorRole)
 	if err != nil {
 		if err == entity.ErrDuplicateEntry {
 			RespondWithError(w, http.StatusConflict, err, "Email already exists")
+			return
+		}
+		if err == entity.ErrInsufficientPermissions {
+			RespondWithError(w, http.StatusForbidden, err, "Only administrators can create admin or instructor accounts")
 			return
 		}
 		RespondWithError(w, http.StatusInternalServerError, err, "Failed to register user")
@@ -93,6 +97,12 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, err, "Invalid request body")
 		return
 	}
+
+	if err := validateRequest(&req); err != nil {
+		RespondWithError(w, http.StatusBadRequest, err, err.Error())
+		return
+	}
+
 	token, user, err := h.userUseCase.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
 		if err == entity.ErrInvalidCredentials {
