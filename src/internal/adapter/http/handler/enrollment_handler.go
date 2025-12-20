@@ -20,20 +20,20 @@ func NewEnrollmentHandler(enrollmentUseCase *usecase.EnrollmentUseCase) *Enrollm
 	return &EnrollmentHandler{enrollmentUseCase: enrollmentUseCase}
 }
 
-// EnrollInCourse godoc
-// @Summary Enroll in a course
-// @Description Enroll a student in a course
-// @Tags Enrollments
-// @Accept json
-// @Produce json
-// @Param id path string true "Course ID"
-// @Success 201 {object} dto.SuccessResponse{data=dto.EnrollmentDTO}
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Failure 409 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Security BearerAuth
-// @Router /courses/{id}/enroll [post]
+	// EnrollInCourse godoc
+	// @Summary Enroll in a course
+	// @Description Enroll a student in a course
+	// @Tags Enrollments
+	// @Accept json
+	// @Produce json
+	// @Param id path string true "Course ID"
+	// @Success 201 {object} dto.SuccessResponse{data=dto.EnrollmentDTO}
+	// @Failure 400 {object} dto.ErrorResponse
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 409 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /courses/{id}/enroll [post]
 func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	courseID, err := uuid.Parse(vars["id"])
@@ -50,11 +50,9 @@ func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Reques
 
 	var req dto.EnrollCourseRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		// If no body provided, assume self-enrollment
 		req.StudentID = userID.String()
 	}
 
-	// If StudentID not provided or empty, use self-enrollment
 	if req.StudentID == "" {
 		req.StudentID = userID.String()
 	}
@@ -74,19 +72,19 @@ func (h *EnrollmentHandler) EnrollInCourse(w http.ResponseWriter, r *http.Reques
 	respondWithJSON(w, http.StatusCreated, MapEntityToEnrollmentDTO(enrollment))
 }
 
-// GetStudentCourses godoc
-// @Summary Get student courses
-// @Description Get all courses a student is enrolled in
-// @Tags Enrollments
-// @Accept json
-// @Produce json
-// @Param id path string true "Student ID"
-// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
-// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
-// @Failure 404 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Security BearerAuth
-// @Router /students/{id}/courses [get]
+	// GetStudentCourses godoc
+	// @Summary Get student courses
+	// @Description Get all courses a student is enrolled in
+	// @Tags Enrollments
+	// @Accept json
+	// @Produce json
+	// @Param id path string true "Student ID"
+	// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
+	// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /students/{id}/courses [get]
 func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	studentID, err := uuid.Parse(vars["id"])
@@ -114,19 +112,19 @@ func (h *EnrollmentHandler) GetStudentCourses(w http.ResponseWriter, r *http.Req
 	})
 }
 
-// GetCourseStudents godoc
-// @Summary Get course students
-// @Description Get all students enrolled in a course
-// @Tags Enrollments
-// @Accept json
-// @Produce json
-// @Param id path string true "Course ID"
-// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
-// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
-// @Failure 404 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Security BearerAuth
-// @Router /courses/{id}/students [get]
+	// GetCourseStudents godoc
+	// @Summary Get course students
+	// @Description Get all students enrolled in a course
+	// @Tags Enrollments
+	// @Accept json
+	// @Produce json
+	// @Param id path string true "Course ID"
+	// @Param status query string false "Filter by enrollment status (active/dropped/completed)"
+	// @Success 200 {object} dto.SuccessResponse{data=[]dto.EnrollmentDTO}
+	// @Failure 404 {object} dto.ErrorResponse
+	// @Failure 500 {object} dto.ErrorResponse
+	// @Security BearerAuth
+	// @Router /courses/{id}/students [get]
 func (h *EnrollmentHandler) GetCourseStudents(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	courseID, err := uuid.Parse(vars["id"])
@@ -189,7 +187,10 @@ func (h *EnrollmentHandler) UpdateEnrollmentStatus(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Determine student ID: use provided student_id or default to current user (for self-updates)
+	if !validateAndRespond(w, &req) {
+		return
+	}
+
 	studentID := userID
 	if req.StudentID != "" {
 		parsedStudentID, err := uuid.Parse(req.StudentID)
@@ -239,12 +240,8 @@ func (h *EnrollmentHandler) DropEnrollment(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// For DELETE, we could accept student_id in body, but for simplicity,
-	// we'll use current user as default (matches typical self-drop pattern)
-	// Admin can still drop by using the enrollment update endpoint with status=dropped
 	studentID := userID
 
-	// Optionally accept student_id in query param for admin use
 	if studentIDParam := r.URL.Query().Get("student_id"); studentIDParam != "" {
 		parsedStudentID, err := uuid.Parse(studentIDParam)
 		if err == nil {
