@@ -2,6 +2,9 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -53,69 +56,174 @@ func (r *PostgresLessonRepository) GetVersionByID(ctx context.Context, id uuid.U
 }
 
 func (r *PostgresLessonRepository) GetLatestByModule(ctx context.Context, moduleID uuid.UUID, limit, offset int) ([]*entity.LessonVersion, int64, error) {
-	var lessons []*entity.LessonVersion
-	query := r.db.WithContext(ctx).Model(&entity.LessonVersion{}).
-		Where("module_id = ?", moduleID)
-
-	// Latest version per lesson thread
-	sub := r.db.Model(&entity.LessonVersion{}).
-		Select("lesson_id, MAX(version_number) AS max_version").
-		Where("module_id = ?", moduleID).
-		Group("lesson_id")
-
-	query = query.Joins("JOIN (?) lv ON lv.lesson_id = lesson_versions.lesson_id AND lv.max_version = lesson_versions.version_number", sub)
+	sqlDB, err := r.db.DB()
+	if err != nil {
+		return nil, 0, err
+	}
 
 	var total int64
-	if err := query.Count(&total).Error; err != nil {
+	countSQL := `SELECT COUNT(*) FROM lesson_versions lv
+		INNER JOIN lessons l ON l.id = lv.lesson_id
+		INNER JOIN (
+			SELECT lv2.lesson_id, MAX(lv2.version_number) AS max_version
+			FROM lesson_versions lv2
+			INNER JOIN lessons l2 ON l2.id = lv2.lesson_id
+			WHERE l2.module_id = $1
+			GROUP BY lv2.lesson_id
+		) latest ON latest.lesson_id = lv.lesson_id AND latest.max_version = lv.version_number
+		WHERE l.module_id = $2`
+	err = sqlDB.QueryRowContext(ctx, countSQL, moduleID, moduleID).Scan(&total)
+	if err != nil {
 		return nil, 0, err
 	}
 
+	querySQL := `SELECT lv.id, lv.lesson_id, lv.version_number, lv.content, lv.video_url, lv.created_at, l.module_id FROM lesson_versions lv
+		INNER JOIN lessons l ON l.id = lv.lesson_id
+		INNER JOIN (
+			SELECT lv2.lesson_id, MAX(lv2.version_number) AS max_version
+			FROM lesson_versions lv2
+			INNER JOIN lessons l2 ON l2.id = lv2.lesson_id
+			WHERE l2.module_id = $1
+			GROUP BY lv2.lesson_id
+		) latest ON latest.lesson_id = lv.lesson_id AND latest.max_version = lv.version_number
+		WHERE l.module_id = $2
+		ORDER BY lv.created_at DESC`
+	
+	args := []interface{}{moduleID, moduleID}
+	argIndex := 3
 	if limit > 0 {
-		query = query.Limit(limit)
-	}
-	if offset > 0 {
-		query = query.Offset(offset)
+		querySQL += fmt.Sprintf(" LIMIT $%d", argIndex)
+		args = append(args, limit)
+		argIndex++
+		if offset > 0 {
+			querySQL += fmt.Sprintf(" OFFSET $%d", argIndex)
+			args = append(args, offset)
+		}
 	}
 
-	if err := query.Order("created_at DESC").Find(&lessons).Error; err != nil {
+	rows, err := sqlDB.QueryContext(ctx, querySQL, args...)
+	if err != nil {
 		return nil, 0, err
+	}
+	defer rows.Close()
+
+	type lessonResult struct {
+		ID            uuid.UUID
+		LessonID      uuid.UUID
+		VersionNumber int
+		Content       sql.NullString
+		VideoURL      sql.NullString
+		CreatedAt     time.Time
+		ModuleID      uuid.UUID
+	}
+	var results []lessonResult
+	for rows.Next() {
+		var result lessonResult
+		if err := rows.Scan(&result.ID, &result.LessonID, &result.VersionNumber, &result.Content, &result.VideoURL, &result.CreatedAt, &result.ModuleID); err != nil {
+			return nil, 0, err
+		}
+		results = append(results, result)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	var lessons []*entity.LessonVersion
+	lessons = make([]*entity.LessonVersion, len(results))
+	for i, result := range results {
+		lessons[i] = &entity.LessonVersion{
+			ID:            result.ID,
+			LessonID:      result.LessonID,
+			ModuleID:      result.ModuleID,
+			VersionNumber: result.VersionNumber,
+			Content:       result.Content.String,
+			VideoURL:      result.VideoURL.String,
+			CreatedAt:     result.CreatedAt,
+		}
 	}
 
 	return lessons, total, nil
 }
 
 func (r *PostgresLessonRepository) GetAllVersions(ctx context.Context, lessonID uuid.UUID, limit, offset int) ([]*entity.LessonVersion, int64, error) {
-	var versions []*entity.LessonVersion
-	query := r.db.WithContext(ctx).Model(&entity.LessonVersion{}).
-		Where("lesson_id = ?", lessonID)
+	sqlDB, err := r.db.DB()
+	if err != nil {
+		return nil, 0, err
+	}
 
 	var total int64
-	if err := query.Count(&total).Error; err != nil {
+	err = sqlDB.QueryRowContext(ctx, "SELECT COUNT(*) FROM lesson_versions WHERE lesson_id = $1", lessonID).Scan(&total)
+	if err != nil {
 		return nil, 0, err
 	}
 
+	querySQL := "SELECT lv.id, lv.lesson_id, lv.version_number, lv.content, lv.video_url, lv.created_at, l.module_id FROM lesson_versions lv INNER JOIN lessons l ON l.id = lv.lesson_id WHERE lv.lesson_id = $1 ORDER BY lv.version_number DESC"
+	
+	args := []interface{}{lessonID}
+	argIndex := 2
 	if limit > 0 {
-		query = query.Limit(limit)
-	}
-	if offset > 0 {
-		query = query.Offset(offset)
+		querySQL += fmt.Sprintf(" LIMIT $%d", argIndex)
+		args = append(args, limit)
+		argIndex++
+		if offset > 0 {
+			querySQL += fmt.Sprintf(" OFFSET $%d", argIndex)
+			args = append(args, offset)
+		}
 	}
 
-	if err := query.Order("version_number DESC").Find(&versions).Error; err != nil {
+	rows, err := sqlDB.QueryContext(ctx, querySQL, args...)
+	if err != nil {
 		return nil, 0, err
+	}
+	defer rows.Close()
+
+	type versionResult struct {
+		ID            uuid.UUID
+		LessonID      uuid.UUID
+		VersionNumber int
+		Content       sql.NullString
+		VideoURL      sql.NullString
+		CreatedAt     time.Time
+		ModuleID      uuid.UUID
+	}
+	var results []versionResult
+	for rows.Next() {
+		var result versionResult
+		if err := rows.Scan(&result.ID, &result.LessonID, &result.VersionNumber, &result.Content, &result.VideoURL, &result.CreatedAt, &result.ModuleID); err != nil {
+			return nil, 0, err
+		}
+		results = append(results, result)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	var versions []*entity.LessonVersion
+
+	versions = make([]*entity.LessonVersion, len(results))
+	for i, result := range results {
+		versions[i] = &entity.LessonVersion{
+			ID:            result.ID,
+			LessonID:      result.LessonID,
+			ModuleID:      result.ModuleID,
+			VersionNumber: result.VersionNumber,
+			Content:       result.Content.String,
+			VideoURL:      result.VideoURL.String,
+			CreatedAt:     result.CreatedAt,
+		}
 	}
 
 	return versions, total, nil
 }
 
 func (r *PostgresLessonRepository) GetNextVersionNumber(ctx context.Context, lessonID uuid.UUID) (int, error) {
-	var maxVersion int
-	err := r.db.WithContext(ctx).
-		Model(&entity.LessonVersion{}).
-		Where("lesson_id = ?", lessonID).
-		Select("COALESCE(MAX(version_number), 0)").
-		Scan(&maxVersion).Error
+	sqlDB, err := r.db.DB()
+	if err != nil {
+		return 0, err
+	}
 
+	var maxVersion int
+	err = sqlDB.QueryRowContext(ctx, "SELECT COALESCE(MAX(version_number), 0) FROM lesson_versions WHERE lesson_id = $1", lessonID).Scan(&maxVersion)
 	if err != nil {
 		return 0, err
 	}
