@@ -14,13 +14,13 @@ type LessonVersionDTO struct {
 }
 
 type CreateLessonRequest struct {
-	Content       string `json:"content" validate:"required"`
+	Content       string `json:"content"`
 	VideoURL      string `json:"video_url" validate:"omitempty,url"`
 	AttachmentURL string `json:"attachment_url" validate:"omitempty,url"`
 }
 
 type CreateLessonVersionRequest struct {
-	Content       string `json:"content" validate:"required"`
+	Content       string `json:"content"`
 	VideoURL      string `json:"video_url" validate:"omitempty,url"`
 	AttachmentURL string `json:"attachment_url" validate:"omitempty,url"`
 }
