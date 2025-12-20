@@ -34,3 +34,4 @@ Thumbs.db
 
 # Logs
 *.log
+src/cmd/api/comprehensive_integration_test.go
