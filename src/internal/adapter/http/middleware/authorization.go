@@ -49,6 +49,8 @@ func RequireCourseOwnership(courseRepo repository.CourseRepository) func(http.Ha
 			if err != nil {
 				if err == entity.ErrNotFound {
 					respondWithError(w, http.StatusNotFound, entity.ErrNotFound, "Course not found")
+				} else if isUUIDParsingError(err) {
+					respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid course ID format")
 				} else {
 					respondWithError(w, http.StatusInternalServerError, err, "Failed to verify course ownership")
 				}
@@ -101,6 +103,8 @@ func RequireEnrollment(courseRepo repository.CourseRepository, enrollmentRepo re
 			if err != nil {
 				if err == entity.ErrNotFound {
 					respondWithError(w, http.StatusNotFound, entity.ErrNotFound, "Course not found")
+				} else if isUUIDParsingError(err) {
+					respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid course ID format")
 				} else {
 					respondWithError(w, http.StatusInternalServerError, err, "Failed to fetch course")
 				}
@@ -161,6 +165,8 @@ func RequireModuleOwnership(moduleRepo repository.ModuleRepository, courseRepo r
 			if err != nil {
 				if err == entity.ErrNotFound {
 					respondWithError(w, http.StatusNotFound, entity.ErrNotFound, "Module not found")
+				} else if isUUIDParsingError(err) {
+					respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid module ID format")
 				} else {
 					respondWithError(w, http.StatusInternalServerError, err, "Failed to verify module ownership")
 				}
@@ -169,7 +175,11 @@ func RequireModuleOwnership(moduleRepo repository.ModuleRepository, courseRepo r
 
 			course, err := courseRepo.GetByID(r.Context(), module.CourseID)
 			if err != nil {
+				if isUUIDParsingError(err) {
+					respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid course ID format")
+				} else {
 				respondWithError(w, http.StatusInternalServerError, err, "Failed to verify course ownership")
+				}
 				return
 			}
 
@@ -219,6 +229,8 @@ func RequireModuleAccess(moduleRepo repository.ModuleRepository, courseRepo repo
 			if err != nil {
 				if err == entity.ErrNotFound {
 					respondWithError(w, http.StatusNotFound, entity.ErrNotFound, "Module not found")
+				} else if isUUIDParsingError(err) {
+					respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid module ID format")
 				} else {
 					respondWithError(w, http.StatusInternalServerError, err, "Failed to verify module access")
 				}
@@ -227,13 +239,17 @@ func RequireModuleAccess(moduleRepo repository.ModuleRepository, courseRepo repo
 
 			course, err := courseRepo.GetByID(r.Context(), module.CourseID)
 			if err != nil {
+				if isUUIDParsingError(err) {
+					respondWithError(w, http.StatusBadRequest, entity.ErrInvalidInput, "Invalid course ID format")
+				} else {
 				respondWithError(w, http.StatusInternalServerError, err, "Failed to verify course access")
+				}
 				return
 			}
 
 			if claims.Role == entity.UserRoleInstructor {
 				if course.InstructorID == claims.UserID {
-					next.ServeHTTP(w, r)
+				next.ServeHTTP(w, r)
 					return
 				}
 				// Instructor doesn't own this course
