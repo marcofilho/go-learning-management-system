@@ -89,9 +89,8 @@ All requirements implemented with clean architecture, comprehensive testing, and
 
 **Authorization Layers**:
 1. Route-level middleware (blocks unauthorized roles)
-2. Handler-level validation (edge cases)
-3. Use case-level authorization (business rules)
-4. Entity-level checks (domain authorization)
+2. Use case-level authorization (business rules - e.g., admin-only operations)
+3. Entity-level checks (domain authorization)
 
 **Evidence**: `src/internal/adapter/http/middleware/authorization.go`
 

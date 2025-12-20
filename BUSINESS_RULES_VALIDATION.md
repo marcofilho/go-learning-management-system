@@ -8,6 +8,7 @@ This document provides a comprehensive checklist of all business rules implement
 - [x] Email format validation (must be valid email)
 - [x] Password length validation (minimum 6 characters)
 - [x] Role validation (must be: student, instructor, or admin)
+- [x] Only admins can create admin or instructor accounts (enforced in use case)
 - [x] Duplicate email check (returns 409 Conflict)
 - [x] First name and last name required
 - [x] Password hashing (bcrypt)
@@ -58,6 +59,7 @@ This document provides a comprehensive checklist of all business rules implement
 ### POST /api/courses
 - [x] Requires authentication
 - [x] Instructor or Admin role only
+- [x] Only admins can create courses for other instructors (enforced in use case)
 - [x] Title required (max 255 characters)
 - [x] Description required
 - [x] Instructor ID validation (UUID format)

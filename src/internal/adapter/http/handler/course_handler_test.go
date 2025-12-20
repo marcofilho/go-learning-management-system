@@ -128,15 +128,8 @@ func TestCourseHandler_CreateCourse_InvalidDifficulty_MapsToBadRequest(t *testin
 	handler := NewCourseHandler(courseUC)
 
 	instructorID := uuid.New()
-	instructor, _ := entity.NewUser("inst@example.com", "password123", "John", "Instructor", entity.UserRoleInstructor)
-	instructor.ID = instructorID
 
-	// user lookup ok
-	mockUserRepo.On("GetByID", mock.Anything, instructorID).Return(instructor, nil)
-
-	// entity.NewCourse will fail validation; due to current UC flow, Create is still invoked with nil
-	mockCourseRepo.On("Create", mock.Anything, mock.Anything).Return(entity.ErrInvalidInput)
-
+	// DTO validation should catch invalid difficulty level before use case is called
 	reqBody := dto.CreateCourseRequest{Title: "Course", Description: "Desc", DifficultyLevel: "invalid-level"}
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/courses", bytes.NewBuffer(body))
@@ -148,7 +141,6 @@ func TestCourseHandler_CreateCourse_InvalidDifficulty_MapsToBadRequest(t *testin
 	handler.CreateCourse(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	mockUserRepo.AssertExpectations(t)
 }
 
 func TestCourseHandler_CreateCourse_AdminForOtherInstructor_Success(t *testing.T) {
